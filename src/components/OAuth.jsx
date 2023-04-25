@@ -25,6 +25,8 @@ const OAuth = () => {
           });
         }
         navigate("/")
+        toast.success("Sign in successful")
+
     }
     catch{
       toast.error("Could not sign in with google")
