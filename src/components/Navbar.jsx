@@ -1,8 +1,20 @@
-import React from 'react'
+import { getAuth, onAuthStateChanged } from 'firebase/auth'
+import React, { useEffect, useState } from 'react'
 import {useLocation , Link} from "react-router-dom"
 const Navbar = () => {
+    const[pageState,setPageState]=useState("Sign in")
     const location=useLocation()
-    function pathMathRoute(route){
+    const auth =getAuth();
+    useEffect(()=>{ 
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+              setPageState("Profile")
+            } else {
+              setPageState("Sign in")
+            }
+          });
+    },[auth])
+    function pathMatchRoute(route){
       if(route === location.pathname){
           return true
         }
@@ -15,9 +27,12 @@ const Navbar = () => {
         </div>
         <div>
             <ul className='flex space-x-10'>
-              <Link to={"/"}>  <li className={`py-3 text-sm font-semibold cursor-pointer text-gray-400 border-b-4 border-b-transparent ${pathMathRoute("/") && "text-black border-b-red-400"} `}>Home</li></Link>
-              <Link to={"/offers"}><li className={`py-3 text-sm font-semibold cursor-pointer text-gray-400 border-b-4 border-b-transparent ${pathMathRoute("/offers")&& "text-black border-b-red-400"}`}>offers</li></Link>
-              <Link to={"/sign-in"}><li className={`py-3 text-sm font-semibold cursor-pointer text-gray-400 border-b-4 border-b-transparent ${pathMathRoute("/sign-in")&&  "text-black border-b-red-400"}`}>Sign-in</li></Link>
+              <Link to={"/"}>  <li className={`py-3 text-sm font-semibold cursor-pointer text-gray-400 border-b-4 border-b-transparent ${pathMatchRoute("/") && "text-black border-b-red-400"} `}>Home</li></Link>
+              <Link to={"/offers"}><li className={`py-3 text-sm font-semibold cursor-pointer text-gray-400 border-b-4 border-b-transparent ${pathMatchRoute("/offers")&& "text-black border-b-red-400"}`}>offers</li></Link>
+              {/* we are navigating to profile if the user is not registered he will navigate to sign in as we protected the navigation */}
+              <Link to={"/profile"}><li className={`py-3 text-sm font-semibold cursor-pointer text-gray-400 border-b-4 border-b-transparent ${(pathMatchRoute("/sign-in") || pathMatchRoute("/profile"))&&  "text-black border-b-red-400"}`}>
+                {pageState}
+                </li></Link>
             </ul>
         </div>
       </header>

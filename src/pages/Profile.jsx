@@ -13,30 +13,33 @@ const Profile = () => {
     email:auth.currentUser.email,
   })
   const {name,email}=formdata
+  // on logout
   function onlogOut(){
     auth.signOut()
     navigate('/sign-in')
   }
+  // to update the name in firebase auth and firestore
   function onchange(e){
     setFormdata({...formdata,[e.target.id]:e.target.value})
   }
 async function onSubmit(){
       try{
+        // to update the name in firebase auth
         if(auth.currentUser.displayName!==name){
           await updateProfile(auth.currentUser, {
             displayName: name,
           })
+          // to update the name in firestore
           const docRef =doc(db, "users", auth.currentUser.uid);
           await updateDoc(docRef, {
             name: name,
           });
           toast.success("name updated successfully")
         }
+        // if name is same as before
         else{
             toast.error("name is same as before")
           }
-         
-
       }
       catch(err){
         toast.error("could not update the profile details")
@@ -53,8 +56,7 @@ async function onSubmit(){
             onChange={onchange} 
             className={ `w-full px-4 py-2 mb-6 text-xl text-gray-700 transition ease-in-out bg-white border border-gray-300 rounded ${changeDetails && "bg-red-200 "}`}/>
              {/* Email */}
-            <input type="email"  id="email" value={email} disabled={!changeDetails} 
-            onChange={onchange}
+            <input type="email"  id="email" value={email} disabled
             className='w-full px-4 py-2 mb-6 text-xl text-gray-700 transition ease-in-out bg-white border border-gray-300 rounded'/>
 
             <div className='flex justify-between text-sm whitespace-nowrap sm:text-lg'>
