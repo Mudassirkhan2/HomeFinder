@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from '../firebase';
+import {FaHome} from 'react-icons/fa'
+import { Link } from 'react-router-dom';
 const Profile = () => {
   const auth =getAuth();
   const navigate = useNavigate();
@@ -73,6 +75,12 @@ async function onSubmit(){
 
             </div>
           </form>
+          <button type="submit" className='w-full py-3 mt-4 text-sm font-medium text-white uppercase transition duration-150 ease-in-out bg-blue-600 rounded shadow-md px-7 hover:bg-blue-800 hover:shadow-lg' >
+            <Link to="/create-listing " className='flex items-center justify-center'>
+              <FaHome className='p-1 mr-2 text-3xl border-2 rounded-full'/>
+              Sell or rent your property
+            </Link>
+          </button>
         </div>
       </section> 
     </>
