@@ -161,7 +161,7 @@ async function onSubmit(e) {
             <label htmlFor='name' className='block text-sm font-medium text-gray-700'>
               Name
             </label>
-            <input type='text' name='name' id='name' value={name} onChange={onChange} className='block w-full mt-1 text-xl border-gray-300 rounded-md shadow-sm focus:ring-slate-600 focus:border-slate-600 sm:text-sm'placeholder="Name" maxLength="32"minLength="10" required />
+            <input type='text' name='name' id='name' value={name} onChange={onChange} className='block w-full mt-1 text-xl border-gray-300 rounded-md shadow-sm focus:ring-slate-600 focus:border-slate-600 sm:text-sm'placeholder="Name of the House" maxLength="32"minLength="10" required />
           </div>
           <div className='flex mt-6 space-x-2'>
             {/* label for beds  */}

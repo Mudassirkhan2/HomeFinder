@@ -2,13 +2,27 @@ import React, { useState } from 'react'
 import { getAuth, updateProfile } from "firebase/auth";
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { doc, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  orderBy,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 import { db } from '../firebase';
 import {FaHome} from 'react-icons/fa'
 import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import ListingItem from '../components/ListingItem';
+
 const Profile = () => {
   const auth =getAuth();
   const navigate = useNavigate();
+  const [listings,setListings]=useState([])
+  const [loading,setLoading]=useState(false)
   const[changeDetails,setChangeDetails]=useState(false)
   const [formdata,setFormdata]=useState({
     name:auth.currentUser.displayName,
@@ -47,6 +61,33 @@ async function onSubmit(){
         toast.error("could not update the profile details")
       }
   }
+  // to fetch the listings of the user
+  useEffect(() => {
+    async function fetchUserListings() {
+      const listingRef = collection(db, "listings");
+      // query to get the listings of the  current user
+      // to check if the userRef is equal to the current user id
+      // to create a query in  firestore we have to  use index
+      const q = query(
+        listingRef,
+        where("userRef", "==", auth.currentUser.uid),
+      );
+      const querySnap = await getDocs(q);
+      let listings = [];
+      querySnap.forEach((doc) => {
+        // push the listings to the listings array
+        return listings.push({
+          id: doc.id,
+          data: doc.data(),
+        });
+      });
+      setListings(listings);
+      setLoading(false);
+    }
+    fetchUserListings();
+  }, [auth.currentUser.uid]);
+
+    
   return (
     <>
       <section className='flex flex-col items-center justify-center max-w-6xl mx-auto'>  
@@ -83,6 +124,27 @@ async function onSubmit(){
           </button>
         </div>
       </section> 
+       {/* to show the listings of the user */}
+      <div className='px-3 mx-auto mt-6 max-width-6xl'>
+        {
+          // condition to check if the listings are loaded and if the listings are not empty
+          !loading&& listings.length>0 &&
+          (
+            <>
+              <h2 className='mb-6 text-2xl font-semibold text-center'></h2>
+              <ul className='gap-2 mt-6 mb-6 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4'>
+                {
+                  listings.map((listing)=>{
+                    return(
+                      <ListingItem key={listing.id} id={listing.id} listing={listing.data} />
+                    )
+                  })
+                }
+              </ul>
+            </>
+          )
+        }
+      </div>
     </>
   )
 }
