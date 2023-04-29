@@ -87,6 +87,26 @@ async function onSubmit(){
     fetchUserListings();
   }, [auth.currentUser.uid]);
 
+
+  // to delete the listing
+ async function onDelete(id){
+    if(window.confirm("Are you sure you want to delete this listing?")){
+      try{
+        await deleteDoc(doc(db,'listings',id))
+        const updatedListings=listings.filter(listing=>listing.id!==id)
+        setListings(updatedListings)
+        toast.success("listing deleted successfully")
+      }
+      catch(err){
+        toast.error("could not delete the listing")
+      }
+    }
+  }
+  function onEdit(id){
+    navigate(`/edit-listing/${id}`)
+  }
+  
+
     
   return (
     <>
@@ -136,7 +156,10 @@ async function onSubmit(){
                 {
                   listings.map((listing)=>{
                     return(
-                      <ListingItem key={listing.id} id={listing.id} listing={listing.data} />
+                      <ListingItem key={listing.id} id={listing.id} listing={listing.data}
+                      onDelete={()=>onDelete(listing.id)} 
+                      onEdit={()=>onEdit(listing.id)} 
+                      />
                     )
                   })
                 }
