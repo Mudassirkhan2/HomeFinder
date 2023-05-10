@@ -238,8 +238,7 @@ async function onSubmit(e) {
                       Regular  Price
                     </label>
             <div className="flex items-center justify-center space-x-6">
-              <input type='number' name='regularprice' id='regularprice' value={regularprice} onChange={onChange} className='block w-full mt-1 text-lg transition duration-150 ease-in-out border-gray-300 rounded-md shadow-sm focus:ring-slate-600 focus:border-slate-600 sm:text-sm'placeholder="Price" min="5000"
-              max="100000" required />
+              <input type='number' name='regularprice' id='regularprice' value={regularprice} onChange={onChange} className='block w-full mt-1 text-lg transition duration-150 ease-in-out border-gray-300 rounded-md shadow-sm focus:ring-slate-600 focus:border-slate-600 sm:text-sm'placeholder="Price" min="5000"  max="10000000" required />
               {
               type === 'rent' && (
                 <div>
@@ -255,8 +254,7 @@ async function onSubmit(e) {
               Discounted Price
                       </label>
               <div className="flex items-center justify-center space-x-6">
-                <input type='number' name='discountedprice' id='discountedprice' value={discountedprice} onChange={onChange} className='block w-full mt-1 text-lg transition duration-150 ease-in-out border-gray-300 rounded-md shadow-sm focus:ring-slate-600 focus:border-slate-600 sm:text-sm'placeholder="Price" min="5000"
-                max="100000" required={offer} />
+                <input type='number' name='discountedprice' id='discountedprice' value={discountedprice} onChange={onChange} className='block w-full mt-1 text-lg transition duration-150 ease-in-out border-gray-300 rounded-md shadow-sm focus:ring-slate-600 focus:border-slate-600 sm:text-sm'placeholder="Price" min="5000" max="10000000" required={offer} />
                 {
                 type === 'rent' && (
                   <div>
