@@ -43,15 +43,20 @@ const Listing = () => {
       >
         {listing.imgUrls.map((url, index) => (
           <SwiperSlide key={index}>
-            <div
-              className="relative w-full overflow-hidden h-[300px]"
-              style={{
-                background: `url(${listing.imgUrls[index]}) center no-repeat`,
-                backgroundSize: "cover",
-              }}
-            ></div>
+            <div className="relative w-full h-[300px] lg:h-[400px] overflow-hidden">
+                        <img src={url}   style={{
+                            objectFit: "cover",
+                            width: "100%",
+                            height: "100%",
+                            position: "absolute",
+                }}/>
+                      
+            </div>
           </SwiperSlide>
+          
         ))}
+
+       
       </Swiper>
 
       {/* Listing Details */}
