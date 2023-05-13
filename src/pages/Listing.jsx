@@ -22,7 +22,6 @@ const Listing = () => {
           setListing(docSnap.data());
           setLoading(false);
         }
-        console.log(listing)
       }
       fetchListing();
     }, [params.listingId]);
