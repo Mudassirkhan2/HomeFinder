@@ -15,3 +15,10 @@ body{
 .swiper-pagination-progressbar-fill {
     background: #f01b9b !important;
 }
+/* Remove scrollbar */
+html::-webkit-scrollbar {
+    display: none;
+}
+html{
+    scrollbar-width: none;
+}
