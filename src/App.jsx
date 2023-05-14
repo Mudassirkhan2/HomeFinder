@@ -13,10 +13,12 @@ import CreateListing from "./pages/CreateListing"
 import EditListing from "./pages/EditListing"
 import Listing from "./pages/Listing"
 import Category from "./pages/Category"
-function App() {
+import { FaLinkedin,FaGithub } from "react-icons/fa"
 
+
+function App() {
   return (
-    <>
+    <div className="bg-[#D6E8DB] dark:bg-black">
         <Router>
           <Navbar/>
           <Routes>
@@ -42,6 +44,13 @@ function App() {
             </Route>
           </Routes>
         </Router>
+        <div className="fixed bottom-0 right-0 flex p-1 space-x-4 bg-teal-500 rounded-md dark:text-white">
+         <p className="text-lg text-center font-BarlowCondensed lg:text-2xl">Made By Mudassir Khan</p>
+          <div className="flex items-center justify-center space-x-3 ">
+          <FaLinkedin className="text-2xl text-center cursor-pointer hover:text-blue-500" onClick={()=>window.open("https://www.linkedin.com/in/mudassir-khan-522303233/")}/>
+          <FaGithub className="text-2xl text-center cursor-pointer hover:text-blue-500" onClick={()=>window.open("https://github.com/Mudassirkhan2")}/>
+          </div>
+        </div>
         <ToastContainer
           position="bottom-center"
           autoClose={5000}
@@ -54,7 +63,8 @@ function App() {
           pauseOnHover
           theme="dark"
 />
-    </>
+
+    </div>
   )
 }
 
