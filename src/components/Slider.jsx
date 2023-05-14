@@ -56,9 +56,9 @@ const Slider = () => {
             {listings.map((listing) => (
                 <SwiperSlide key={listing.id}  onClick={() => navigate(`/category/${listing.data.type}/${listing.id}`)}
                 >
-                    <div className="relative w-full h-[300px] overflow-hidden">
+                    <div className="relative w-full h-[300px] lg:h-[400px] overflow-hidden">
                         <img src={listing.data.imgUrls[0]} alt={listing.data.title}  style={{
-                            objectFit: "cover",
+                            objectFit: "fill",
                             width: "100%",
                             height: "100%",
                             position: "absolute",

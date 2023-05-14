@@ -7,7 +7,7 @@ import{v4 as uuidv4} from "uuid"
 import { serverTimestamp ,addDoc ,collection} from "firebase/firestore"
 import { db } from "../firebase"
 import { useNavigate } from "react-router-dom"
-
+import {motion} from "framer-motion"
 const CreateListing = () => {
   const navigate = useNavigate()
   const auth = getAuth()
@@ -82,6 +82,14 @@ async function onSubmit(e) {
       toast.error("You can upload maximum 6 images")
       return
     }
+    // to see images not bigger than 2mb 
+    for(let i=0; i<images.length; i++){
+      if(images[i].size > 2 * 1024 * 1024){
+        setLoading(false)
+        toast.error("Image size cannot be greater than 2mb")
+        return
+      }
+    }
     // function to store images in firebase storage
     async function storeImage(image){
       return new Promise((resolve, reject) => {
@@ -115,6 +123,7 @@ async function onSubmit(e) {
       [...images].map((image) => storeImage(image))
     ).catch((error) => {
       setLoading(false);
+      console.log(error.message)
       toast.error("Images not uploaded");
       return;
     });
@@ -142,9 +151,11 @@ async function onSubmit(e) {
   }
   return (
     <main className='max-w-md px-2 mx-auto'>
-        <h1 className='mt-6 text-3xl font-bold text-center'>Create a Listing </h1>
+        <motion.h1 className='mt-6 text-3xl font-bold text-center dark:text-teal-400'  initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}>Create a Listing </motion.h1>
         <form onSubmit={onSubmit} >
-          <p className='mt-6 text-lg font-semibold '>Sell / Rent </p>
+          <p className='mt-6 text-lg font-semibold dark:text-white '>Sell / Rent </p>
           <div className='flex '>
             <button type='button' id='type' value="sale" onClick={onChange} className={`px-7 py-3 mr-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg focus:shadow-lg active:shadow-xl transition duration-100 ease-in-out w-full ${
               type === 'rent' ? 'bg-gray-200 text-gray-500' : 'bg-slate-600 text-gray-900'
@@ -158,7 +169,7 @@ async function onSubmit(e) {
             </button>
           </div>
           <div className='mt-6'>
-            <label htmlFor='name' className='block text-sm font-medium text-gray-700'>
+            <label htmlFor='name' className='block text-sm font-medium text-gray-700 dark:text-white'>
               Name
             </label>
             <input type='text' name='name' id='name' value={name} onChange={onChange} className='block w-full mt-1 text-xl border-gray-300 rounded-md shadow-sm focus:ring-slate-600 focus:border-slate-600 sm:text-sm'placeholder="Name of the House" maxLength="32"minLength="10" required />
@@ -166,21 +177,21 @@ async function onSubmit(e) {
           <div className='flex mt-6 space-x-2'>
             {/* label for beds  */}
             <div>
-              <label htmlFor='bedrooms' className='block text-sm font-medium text-gray-700'>  
+              <label htmlFor='bedrooms' className='block text-sm font-medium text-gray-700 dark:text-white'>  
                 Beds
               </label>
               <input type='number' name='bedrooms' id='bedrooms' value={bedrooms} onChange={onChange} className='block w-full mt-1 text-xl transition duration-150 ease-in-out border-gray-300 rounded-md shadow-sm focus:ring-slate-600 focus:border-slate-600 sm:text-sm'placeholder="Beds" maxLength="50" minLength="1" required />    
             </div>
             {/* label for baths  */}
-            <div>
-              <label htmlFor='bathrooms' className='block text-sm font-medium text-gray-700'>  
+            <div> 
+              <label htmlFor='bathrooms' className='block text-sm font-medium text-gray-700 dark:text-white'>  
                 Baths
                 </label> 
               <input type='number' name='bathrooms' id='bathrooms' value={bathrooms} onChange={onChange} className='block w-full mt-1 text-xl transition duration-150 ease-in-out border-gray-300 rounded-md shadow-sm focus:ring-slate-600 focus:border-slate-600 sm:text-sm'placeholder="Beds" maxLength="50" minLength="1" required />    
             </div>
           </div>  
 
-          <p className='mt-6 text-lg font-semibold '> Parking Spot </p>
+          <p className='mt-6 text-lg font-semibold dark:text-white'> Parking Spot </p>
           <div className='flex '>
             <button type='button' id='parking' value={true} onClick={onChange} className={`px-7 py-3 mr-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg focus:shadow-lg active:shadow-xl transition duration-100 ease-in-out w-full ${
             !parking ? 'bg-gray-200 text-gray-500' : 'bg-slate-600 text-gray-900'
@@ -194,7 +205,7 @@ async function onSubmit(e) {
             </button>
           </div>
 
-          <p className='mt-6 text-lg font-semibold '>Furnished </p>
+          <p className='mt-6 text-lg font-semibold dark:text-white'>Furnished </p>
           <div className='flex '>
             <button type='button' id='furnished' value={true} onClick={onChange} className={`px-7 py-3 mr-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg focus:shadow-lg active:shadow-xl transition duration-100 ease-in-out w-full ${
             !furnished ? 'bg-gray-200 text-gray-500' : 'bg-slate-600 text-gray-900'
@@ -209,18 +220,18 @@ async function onSubmit(e) {
           </div>
 
           <div className='mt-6'>
-            <label htmlFor='address' className='block text-xl font-medium text-gray-700'>
+            <label htmlFor='address' className='block text-xl font-medium text-gray-700 dark:text-white'>
               Address
             </label>
             <textarea type='text' name='address' id='address' value={address} onChange={onChange} className='block w-full mt-1 text-xl transition duration-150 ease-in-out border-gray-300 rounded-md shadow-sm focus:ring-slate-600 focus:border-slate-600 sm:text-sm'placeholder="Address"  />
         
-            <label htmlFor='description' className='block text-xl font-medium text-gray-700'>
+            <label htmlFor='description' className='block text-xl font-medium text-gray-700 dark:text-white'>
             Description
             </label>
             <textarea type='text' name='description' id='description' value={description} onChange={onChange} className='block w-full mt-1 text-xl transition duration-150 ease-in-out border-gray-300 rounded-md shadow-sm focus:ring-slate-600 focus:border-slate-600 sm:text-sm'placeholder="Description"  />
           </div>
           
-          <p className='mt-3 text-lg font-semibold '>Offer </p>
+          <p className='mt-3 text-lg font-semibold dark:text-white'>Offer </p>
           <div className='flex '>
             <button type='button' id='offer' value={true} onClick={onChange} className={`px-7 py-3 mr-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg focus:shadow-lg active:shadow-xl transition duration-100 ease-in-out w-full ${
             !offer ? 'bg-gray-200 text-gray-500' : 'bg-slate-600 text-gray-900'
@@ -234,7 +245,7 @@ async function onSubmit(e) {
             </button>
           </div>
           <div className="flex flex-col items-start mt-3 mb-2">
-            <label htmlFor='regularprice' className='block text-xl font-medium text-gray-700'>
+            <label htmlFor='regularprice' className='block text-xl font-medium text-gray-700 dark:text-white'>
                       Regular  Price
                     </label>
             <div className="flex items-center justify-center space-x-6">
@@ -250,7 +261,7 @@ async function onSubmit(e) {
           {
             offer && (
               <div className="flex flex-col items-start mt-3 mb-2">
-              <label htmlFor='discountedprice' className='block text-xl font-medium text-gray-700'>
+              <label htmlFor='discountedprice' className='block text-xl font-medium text-gray-700 dark:text-white'>
               Discounted Price
                       </label>
               <div className="flex items-center justify-center space-x-6">
@@ -266,11 +277,11 @@ async function onSubmit(e) {
             )
           }
           <div>
-            <label htmlFor='images' className='block text-xl font-medium text-gray-700'>
+            <label htmlFor='images' className='block text-xl font-medium text-gray-700 dark:text-white'>
               Images
             </label>
-            <p className="text-gray-600">The first image will be cover (max 6)</p>
-            <input type='file' name='images' id='images' onChange={onChange} className='block w-full px-3 py-2 mt-1 text-xl transition duration-150 ease-in-out border-gray-300 rounded-md shadow-sm focus:ring-slate-600 focus:border-slate-600 sm:text-sm'placeholder="Image" multiple required  accept=".jpg,.png,.jpeg"/>
+            <p className="text-gray-600 dark:text-white">The first image will be cover (max 6) (less than 2MB)</p>
+            <input type='file' name='images' id='images' onChange={onChange} className='block w-full px-3 py-2 mt-1 text-xl transition duration-150 ease-in-out border-gray-300 rounded-md shadow-sm dark:text-white focus:ring-slate-600 focus:border-slate-600 sm:text-sm' placeholder="Image" multiple required  accept=".jpg,.png,.jpeg"/>
           </div>
           <button type="submit" className="w-full py-3 mt-4 mb-6 text-sm font-medium text-white uppercase transition duration-150 ease-in-out bg-blue-600 rounded shadow-md px-7 hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg active:bg-blue-800 active:shadow-lg">
             Create Listing

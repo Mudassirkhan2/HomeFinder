@@ -44,7 +44,7 @@ const Listing = () => {
           <SwiperSlide key={index}>
             <div className="relative w-full h-[300px] lg:h-[400px] overflow-hidden">
                         <img src={url}   style={{
-                            objectFit: "cover",
+                            objectFit: "fill",
                             width: "100%",
                             height: "100%",
                             position: "absolute",

@@ -17,7 +17,7 @@ import {FaHome} from 'react-icons/fa'
 import { Link } from 'react-router-dom';
 import { useEffect } from 'react';
 import ListingItem from '../components/ListingItem';
-
+import {motion} from 'framer-motion'
 const Profile = () => {
   const auth =getAuth();
   const navigate = useNavigate();
@@ -71,6 +71,7 @@ async function onSubmit(){
       const q = query(
         listingRef,
         where("userRef", "==", auth.currentUser.uid),
+        orderBy("timeStamp", "desc")
       );
       const querySnap = await getDocs(q);
       let listings = [];
@@ -111,7 +112,12 @@ async function onSubmit(){
   return (
     <>
       <section className='flex flex-col items-center justify-center max-w-6xl mx-auto'>  
-        <h1 className='mt-6 text-3xl font-bold text-center'>My Profile</h1>
+        <motion.h1 className='mt-6 text-3xl font-bold text-center dark:text-white'  initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}>My Profile</motion.h1>
+        <motion.img src={auth.currentUser.photoURL} alt="Profile Img" className='mt-2 rounded-lg' initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }} />
         <div className='w-full md:w-[50%] mt-6 px-3'>
           <form >
             {/* Name */}
@@ -123,7 +129,7 @@ async function onSubmit(){
             className='w-full px-4 py-2 mb-6 text-xl text-gray-700 transition ease-in-out bg-white border border-gray-300 rounded'/>
 
             <div className='flex justify-between text-sm whitespace-nowrap sm:text-lg'>
-              <p className='flex items-center '>Do you want to change your name?
+              <p className='flex items-center dark:text-white'>Do you want to change your name?
                 <span onClick={()=>{
                   changeDetails && onSubmit()
                   setChangeDetails(!changeDetails)

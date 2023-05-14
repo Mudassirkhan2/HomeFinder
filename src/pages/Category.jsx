@@ -76,8 +76,8 @@ async function onFetchMoreListings() {
 
 
   return (
-    <div className='max-w-6xl px-3 mx-auto'>
-      <h1 className='mt-6 mb-6 text-3xl font-bold text-center'>{
+    <div className='h-screen max-w-6xl px-3 mx-auto'>
+      <h1 className='mt-6 mb-6 text-3xl font-bold text-center dark:text-teal-400'>{
         params.categoryName == "rent" ? "Places for Rent" : "Places for Sale"
 }</h1>
       {
@@ -95,8 +95,7 @@ async function onFetchMoreListings() {
             {
               lastFetchedListing && (
                 <div className='flex items-center justify-center'>
-                  <button className='bg-white px-3 py-1.5 text-gray-700 border-gray-300 mb-6 mt-6 hover:border-slate-600 rounded transition duration-150 ease-in-out' onClick={onFetchMoreListings}> Load more</button>
-
+                  <button className='bg-teal-400 px-3 py-1.5 text-gray-700 border-gray-300 mb-6 mt-6 hover:border-slate-600 rounded transition duration-150 ease-in-out' onClick={onFetchMoreListings}> Load more</button>
                 </div>
               )
             }

@@ -5,7 +5,7 @@ import { FaTrash } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
 const  ListingItem =({ listing, id, onEdit, onDelete }) => {
   return (
-    <li className="relative bg-white flex flex-col justify-between items-center shadow-md hover:shadow-xl rounded-md overflow-hidden transition-shadow duration-150 m-[10px]">
+    <li className="relative bg-[#C1D0B5]  flex flex-col justify-between items-center shadow-md hover:shadow-xl rounded-md overflow-hidden transition-shadow duration-150 m-[10px]">
       <Link className="contents" to={`/category/${listing.type}/${id}`}>
         <img
           className="h-[170px] w-full object-cover hover:scale-105 transition-scale duration-200 ease-in"
@@ -17,12 +17,12 @@ const  ListingItem =({ listing, id, onEdit, onDelete }) => {
         <div className="w-full p-[10px]">
           <div className="flex items-center space-x-1">
             <MdLocationOn className="w-4 h-4 text-green-600" />
-            <p className="font-semibold text-sm mb-[2px] text-gray-600 truncate">
+            <p className="font-semibold text-sm mb-[2px] text-gray-600   truncate">
               {listing.address}
             </p>
           </div>
-          <p className="m-0 text-xl font-semibold truncate">{listing.name}</p>
-          <p className="text-[#457b9d] mt-2 font-semibold">
+          <p className="m-0 text-xl font-semibold truncate ">{listing.name}</p>
+          <p className="text-[#457b9d] mt-2 font-semibold font-Bellefair">
           <span className="text-xl font-semibold"> &#8377;</span>
             {
                 // if offer is true then show discounted price else show regular price
