@@ -5,7 +5,7 @@ import OAuth from '../components/OAuth';
 import { signInWithEmailAndPassword,getAuth } from 'firebase/auth';
 import { toast } from 'react-toastify';
 import property from "../assets/property.png"
-
+import {motion} from 'framer-motion'
 const SignIn = () => {
   const navigate=useNavigate();
   const[formdata,setFormData]=React.useState({ 
@@ -36,7 +36,9 @@ const SignIn = () => {
   }
   return (
     <section className='h-screen'>
-      <h1 className='mt-6 text-3xl font-bold text-center dark:text-teal-400'> Sign In </h1>
+      <motion.h1 className='mt-6 text-3xl font-bold text-center dark:text-teal-400' initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}> Sign In </motion.h1>
       <div className='flex flex-wrap items-center justify-center max-w-6xl px-6 py-12 mx-auto '>
         <div className='md:w-[67%] lg:w-[50%] mb-12 md:mb-6'>
           <img src={property} alt="Key"  className='w-full rounded-2xl'/>

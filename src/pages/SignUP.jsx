@@ -8,6 +8,7 @@ import { serverTimestamp, setDoc,doc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import property from "../assets/property.png"
+import { motion } from 'framer-motion';
 const SignUP = () => {
   const[formdata,setFormData]=React.useState({
     name:"", 
@@ -44,7 +45,9 @@ const SignUP = () => {
   }
   return (
     <section className='h-screen'>
-      <h1 className='mt-6 text-3xl font-bold text-center dark:text-teal-400'> Sign Up </h1>
+      <motion.h1 className='mt-6 text-3xl font-bold text-center dark:text-teal-400' initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}> Sign Up </motion.h1>
       <div className='flex flex-wrap items-center justify-center max-w-6xl px-6 py-12 mx-auto '>
         <div className='md:w-[67%] lg:w-[50%] mb-12 md:mb-6'>
           <img src={property} alt="Key"  className='w-full rounded-2xl'/>

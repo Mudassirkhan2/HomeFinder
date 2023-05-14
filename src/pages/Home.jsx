@@ -5,6 +5,8 @@ import { db } from '../firebase'
 import { Link } from 'react-router-dom'
 import ListingItem from '../components/ListingItem'
 import { FaHome } from 'react-icons/fa'
+import { motion } from 'framer-motion'
+import { useInView } from 'react-intersection-observer';
 const Home = () => {
   // offers
   const [offersListing, setOffersListing] = useState(null)
@@ -75,7 +77,22 @@ const Home = () => {
     }
     fetchOffers()
   }, [])
+  // plcaes for rent
+  const [ref, inView] = useInView({
+    triggerOnce: true, // Animation triggers only once
+    threshold: 0.1, // Trigger animation when 10% of the element is visible
+  });
+  // for Sale
+    const [targetref, inView1] = useInView({
+      triggerOnce: true, // Animation triggers only once
+      threshold: 0.1, // Trigger animation when 10% of the element is visible
+    });
 
+
+    const animationVariants = {
+      visible: { opacity: 1, x: 0 },
+      hidden: { opacity: 0, x: -100 },
+    };
 
   return (
     <div>
@@ -90,56 +107,74 @@ const Home = () => {
               Sell or rent your property
             </Link>
           </button>
-              <h2 className='px-3 mt-6 text-2xl font-semibold dark:text-teal-400'> Recent Offers</h2>
+              <motion.h2 className='px-3 mt-6 text-2xl font-semibold dark:text-teal-400'
+                initial={{ opacity: 0, x: -100 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.9 }}
+              > Recent Offers</motion.h2>
               <Link to='/offers' >
                 <p className='px-3 text-sm text-blue-600 transition ease-in-out text-start hover:text-blue-700 animate-pulse'>Show more offers</p>
               </Link>
-              <ul className='sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+              <motion.ul className='sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.9 }} >
                 {
                   offersListing.map((listing) => (
                     <ListingItem key={listing.id} listing={listing.data}  id={listing.id
                     }/>
                   ))
                 }
-              </ul>
+              </motion.ul>
 
             </div>
           )
         }
         {
           rentListing && rentListing.length > 0 && (
-            <div className='m-2 mb-4 '>
-              <h2 className='px-3 mt-6 text-2xl font-semibold dark:text-teal-400'>Places for Rent </h2>
+            <div className='m-2 mb-4 ' ref={ref}>
+              <motion.h2 className='px-3 mt-6 text-2xl font-semibold dark:text-teal-400' initial="hidden"
+                  animate={inView ? 'visible' : 'hidden'}
+                  variants={animationVariants}
+                  transition={{ duration: 0.8 }}>Places for Rent </motion.h2>
               <Link to='/category/rent' >
                 <p className='px-3 text-sm text-blue-600 transition ease-in-out hover:text-blue-700 animate-pulse'>Show more places for rent</p>
               </Link>
-              <ul className='sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+              <motion.ul className='sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' initial="hidden"
+                  animate={inView ? 'visible' : 'hidden'}
+                  variants={animationVariants}
+                  transition={{ duration: 0.8 }}>
                 {
                   rentListing.map((listing) => (
                     <ListingItem key={listing.id} listing={listing.data}  id={listing.id
                     }/>
                   ))
                 }
-              </ul>
+              </motion.ul>
 
             </div>
           )
         }
         {
           saleListing && saleListing.length > 0 && (
-            <div className='m-2 mb-4 '>
-              <h2 className='px-3 mt-6 text-2xl font-semibold dark:text-teal-400'>Places for Sale </h2>
+            <div className='m-2 mb-4 ' ref={targetref} >
+              <motion.h2 className='px-3 mt-6 text-2xl font-semibold dark:text-teal-400' initial="hidden"
+                  animate={inView1 ? 'visible' : 'hidden'}
+                  variants={animationVariants}
+                  transition={{ duration: 0.8 }}>Places for Sale </motion.h2>
               <Link to='/category/sale' >
                 <p className='px-3 text-sm text-blue-600 transition duration-300 ease-in-out hover:text-blue-700 animate-pulse'>Show more places for sale</p>
               </Link>
-              <ul className='sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+              <motion.ul className='sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' initial="hidden"
+                  animate={inView1 ? 'visible' : 'hidden'}
+                  variants={animationVariants}
+                  transition={{ duration: 0.8 }} >
                 {
                   saleListing.map((listing) => (
                     <ListingItem key={listing.id} listing={listing.data}  id={listing.id
                     }/>
                   ))
                 }
-              </ul>
+              </motion.ul>
 
             </div>
           )

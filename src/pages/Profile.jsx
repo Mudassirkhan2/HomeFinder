@@ -114,10 +114,10 @@ async function onSubmit(){
       <section className='flex flex-col items-center justify-center max-w-6xl mx-auto'>  
         <motion.h1 className='mt-6 text-3xl font-bold text-center dark:text-white'  initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}>My Profile</motion.h1>
+        transition={{ duration: 0.8 }}>My Profile</motion.h1>
         <motion.img src={auth.currentUser.photoURL} alt="Profile Img" className='mt-2 rounded-lg' initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }} />
+        transition={{ duration: 0.6 }} />
         <div className='w-full md:w-[50%] mt-6 px-3'>
           <form >
             {/* Name */}
