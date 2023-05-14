@@ -50,6 +50,7 @@
 * User can login using <b>Google</b> gmail  account or test credentails (using firebase Authentication).
 * If user  <b>forgot</b> password , Can change passoword using reset Link.
 * Profile Page, User can edit Name of the Account.
+* Implemented <b> Dark mode </b>using Tailwind css in built classes.
 * Added Responsiveness for nearly all devices from 350px onwards :tada:
 * Loaders & Alerts: Loaders are added when products are fetching, React Toastify is used for alerts message
 * Note:- 'Public Page'- Opens without Authentication, 'Private Page' - Opens only if user is Authenticated otherwise opens sign in  Page.
