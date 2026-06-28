@@ -52,16 +52,16 @@ const Navbar = () => {
 
   return (
     <div className="sticky top-0 z-30 bg-surface dark:bg-dark-bg border-b border-surface-border dark:border-dark-border shadow-sm font-BarlowCondensed">
-      <header className="flex items-center justify-between max-w-6xl px-3 mx-auto h-14 gap-4">
+      <header className="flex items-stretch justify-between max-w-6xl px-3 mx-auto h-14 gap-4">
         {/* Logo */}
-        <Link to="/" className="flex-shrink-0">
+        <Link to="/" className="flex-shrink-0 flex items-center">
           <p className="font-bold font-RampartOne text-content-primary dark:text-white">
             Home<span className="text-primary">Finder</span>
           </p>
         </Link>
 
         {/* Search bar — desktop */}
-        <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-sm">
+        <form onSubmit={handleSearch} className="hidden md:flex self-center flex-1 max-w-sm">
           <div className="relative w-full">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted text-sm" />
             <input
@@ -75,9 +75,9 @@ const Navbar = () => {
         </form>
 
         {/* Nav links */}
-        <ul className="flex items-center gap-4 md:gap-6">
+        <ul className="flex items-stretch gap-4 md:gap-6">
           {/* Mobile search toggle */}
-          <li className="md:hidden">
+          <li className="md:hidden flex items-center">
             <button
               onClick={() => setSearchOpen(!searchOpen)}
               className="text-content-secondary dark:text-content-muted hover:text-primary transition-colors"
@@ -87,15 +87,15 @@ const Navbar = () => {
             </button>
           </li>
 
-          <li>
+          <li className="flex items-center">
             <button onClick={handleTheme} className="text-content-secondary dark:text-content-muted hover:text-content-primary dark:hover:text-white transition-colors">
               {theme === 'light' ? <BsFillMoonStarsFill className="text-lg" /> : <BsSun className="text-lg" />}
             </button>
           </li>
 
           {/* Desktop-only nav links — bottom tab bar handles mobile */}
-          <li className="hidden md:block">
-            <Link to="/" className={`py-3 text-sm font-semibold border-b-[3px] transition-colors ${
+          <li className="hidden md:flex items-stretch">
+            <Link to="/" className={`flex items-center text-sm font-semibold border-b-[3px] transition-colors ${
               pathMatchRoute("/")
                 ? "text-content-primary dark:text-white border-primary"
                 : "text-content-secondary dark:text-content-muted border-transparent hover:text-content-primary dark:hover:text-white"
@@ -104,8 +104,8 @@ const Navbar = () => {
             </Link>
           </li>
 
-          <li className="hidden md:block">
-            <Link to="/offers" className={`py-3 text-sm font-semibold border-b-[3px] transition-colors ${
+          <li className="hidden md:flex items-stretch">
+            <Link to="/offers" className={`flex items-center text-sm font-semibold border-b-[3px] transition-colors ${
               pathMatchRoute("/offers")
                 ? "text-content-primary dark:text-white border-primary"
                 : "text-content-secondary dark:text-content-muted border-transparent hover:text-content-primary dark:hover:text-white"
@@ -115,8 +115,8 @@ const Navbar = () => {
           </li>
 
           {loggedIn && (
-            <li className="hidden md:block">
-              <Link to="/saved" title="Saved Properties" className={`py-3 text-sm font-semibold border-b-[3px] transition-colors flex items-center gap-1 ${
+            <li className="hidden md:flex items-stretch">
+              <Link to="/saved" title="Saved Properties" className={`flex items-center gap-1 text-sm font-semibold border-b-[3px] transition-colors ${
                 pathMatchRoute("/saved")
                   ? "text-content-primary dark:text-white border-primary"
                   : "text-content-secondary dark:text-content-muted border-transparent hover:text-content-primary dark:hover:text-white"
@@ -127,8 +127,8 @@ const Navbar = () => {
             </li>
           )}
 
-          <li className="hidden md:block">
-            <Link to="/profile" className={`py-3 text-sm font-semibold border-b-[3px] transition-colors ${
+          <li className="hidden md:flex items-stretch">
+            <Link to="/profile" className={`flex items-center text-sm font-semibold border-b-[3px] transition-colors ${
               (pathMatchRoute("/sign-in") || pathMatchRoute("/profile"))
                 ? "text-content-primary dark:text-white border-primary"
                 : "text-content-secondary dark:text-content-muted border-transparent hover:text-content-primary dark:hover:text-white"
