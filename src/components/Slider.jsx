@@ -1,92 +1,58 @@
-import { collection,getDocs, limit, orderBy, query } from 'firebase/firestore'
-import { db } from '../firebase'
-import Spinner from '../components/Spinner'
-import React, { useEffect, useState } from 'react'
-import {Swiper, SwiperSlide} from 'swiper/react'
-import SwiperCore, { 
-    EffectFade,
-    Autoplay,
-    Pagination,
-    Navigation,
-} from 'swiper'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { Autoplay, Pagination, EffectFade } from 'swiper'
 import 'swiper/css/bundle'
-import {useNavigate} from 'react-router-dom'
+import Spinner from './Spinner'
+import api from '../utils/api'
 
 const Slider = () => {
-    const [listings, setListings] = useState(null)
-    const [loading, setLoading] = useState(true)
-    const navigate = useNavigate()
-    SwiperCore.use([Autoplay, Pagination, Navigation])
-    useEffect(() => {
-    async function fetchListings() {
-        const listingRef = collection(db, 'listings')
-        // query to get the latest 5 listings
-        const q = query(listingRef, orderBy('timeStamp', 'desc'),limit(5))
-        // querySnapshot is an array of documents in the collection that satisfy the condition of the query.
-        const querySnapshot = await getDocs(q)
-        let listings = []
-        querySnapshot.forEach((doc) => {
-        return  listings.push({
-            id : doc.id,
-            data : doc.data(),
-        });
-        });
-        setListings(listings)
-        setLoading(false)
-    }
-    fetchListings()
-    }, [])
-    if (loading) { 
-        return <Spinner />
-    }
-    if (listings.length === 0) {
-        return <h1>No listings found</h1>
-    }
-    // listing.data.imgUrls[0]
-    return listings && (
-    <>
-       <Swiper 
-       slidesPerView={1}
-       navigation
-       pagination={{ type: "progressbar" }}
-       effect="fade"
-       modules={[EffectFade]}
-       autoplay={{ delay: 3000 }} >
-        
-            {listings.map((listing) => (
-                <SwiperSlide key={listing.id}  onClick={() => navigate(`/category/${listing.data.type}/${listing.id}`)}
-                >
-                    <div className="relative w-full h-[300px] lg:h-[400px] overflow-hidden">
-                        <img src={listing.data.imgUrls[0]} alt={listing.data.title}  style={{
-                            objectFit: "fill",
-                            width: "100%",
-                            height: "100%",
-                            position: "absolute",
-                }}/>
-                      
-                    </div>
-                    <p className="text-[#f1faee] absolute left-1 top-3 font-medium max-w-[90%] bg-[#457b9d] shadow-lg opacity-90 p-2 rounded-br-3xl">
-                {listing.data.name}
-              </p>
-              <p className="text-[#f1faee] absolute left-1 bottom-1 font-semibold max-w-[90%] bg-[#e63946] shadow-lg opacity-90 p-2 rounded-tr-3xl">
-              <span className="text-xl font-semibold"> &#8377;</span>{listing.data.discountedprice ?? listing.data.regularprice}
-                {listing.data.type === "rent" && " / month"}
-              </p>
-                {/* <div
-                style={{
-                  background: `url(${listing.data.imgUrls[0]}) center, no-repeat`,
-                  backgroundSize: "cover",
-                }}
-                className="relative w-full h-[300px] overflow-hidden"
-              ></div> */}
-                    
-                </SwiperSlide>
-            ))}
+  const [listings, setListings] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
+  useEffect(() => {
+    api.get('/listings', { params: { limit: 5 } })
+      .then((res) => setListings(res.data.listings))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
 
+  if (loading) return <Spinner />
+  if (!listings || listings.length === 0) return null
 
-       </Swiper>
-    </>
+  return (
+    <Swiper
+      slidesPerView={1}
+      pagination={{ type: 'progressbar' }}
+      effect="fade"
+      modules={[Autoplay, Pagination, EffectFade]}
+      autoplay={{ delay: 3000 }}
+    >
+      {listings.map((listing) => (
+        <SwiperSlide
+          key={listing._id}
+          onClick={() => navigate(`/category/${listing.type}/${listing._id}`)}
+          className="cursor-pointer"
+        >
+          <div className="relative w-full h-[300px] lg:h-[420px] overflow-hidden">
+            <img src={listing.imgUrls[0]} alt={listing.name} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            <p className="absolute left-4 top-4 text-white font-semibold text-sm bg-primary/90 backdrop-blur-sm shadow-lg px-3 py-1.5 rounded-full">
+              {listing.name}
+            </p>
+            <p className="absolute left-4 bottom-4 text-white font-bold text-lg">
+              <span className="text-accent">&#8377;</span>
+              {(listing.discountedprice ?? listing.regularprice).toLocaleString('en-IN')}
+              {listing.type === 'rent' && <span className="text-sm font-normal text-white/80"> / month</span>}
+            </p>
+            <span className="absolute right-4 bottom-4 bg-accent text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase">
+              {listing.type === 'rent' ? 'For Rent' : 'For Sale'}
+            </span>
+          </div>
+        </SwiperSlide>
+      ))}
+    </Swiper>
   )
 }
 

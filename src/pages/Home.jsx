@@ -1,184 +1,133 @@
-import React, { useEffect, useState } from 'react'
-import  Slider  from '../components/Slider'
-import { collection, getDocs, limit, orderBy, query, where } from 'firebase/firestore'
-import { db } from '../firebase'
+import { useEffect, useState } from 'react'
+import Slider from '../components/Slider'
 import { Link } from 'react-router-dom'
 import ListingItem from '../components/ListingItem'
 import { FaHome } from 'react-icons/fa'
 import { motion } from 'framer-motion'
-import { useInView } from 'react-intersection-observer';
+import { useInView } from 'react-intersection-observer'
+import { useSavedListings } from '../hooks/useSavedListings'
+import api from '../utils/api'
+
+const slideIn = { visible: { opacity: 1, x: 0 }, hidden: { opacity: 0, x: -60 } }
+
+const Section = ({ title, to, label, listings, motionRef, inView, savedIds, toggleSave }) => (
+  <div className="m-2 mb-4" ref={motionRef}>
+    <motion.h2
+      className="px-3 mt-6 text-2xl font-semibold text-content-primary dark:text-white"
+      initial="hidden"
+      animate={inView ? 'visible' : 'hidden'}
+      variants={slideIn}
+      transition={{ duration: 0.6 }}
+    >
+      {title}
+    </motion.h2>
+    <Link to={to}>
+      <p className="px-3 text-sm text-primary hover:text-primary-hover transition-colors animate-pulse">{label}</p>
+    </Link>
+    <motion.ul
+      className="sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      initial="hidden"
+      animate={inView ? 'visible' : 'hidden'}
+      variants={slideIn}
+      transition={{ duration: 0.6 }}
+    >
+      {listings.map((listing) => (
+        <ListingItem key={listing.id} listing={listing.data} id={listing.id} savedIds={savedIds} toggleSave={toggleSave} />
+      ))}
+    </motion.ul>
+  </div>
+)
+
 const Home = () => {
-  // offers
   const [offersListing, setOffersListing] = useState(null)
-  useEffect(() => {
-    async function fetchOffers() {
-      // get reference to the offers collection
-      const listingRef = collection(db, 'listings')
-      // query to get the latest 4 offers
-      const q = query(listingRef, where('offer', '==', true),
-      orderBy('timeStamp', 'desc'),      
-      limit(4))
-      // querySnapshot is an array of documents in the collection that satisfy the condition of the query.
-      const querySnapshot = await getDocs(q)
-      let offers = []
-      querySnapshot.forEach((doc) => {
-        return offers.push({
-          id: doc.id,
-          data: doc.data(),
-        })
-      })
-      setOffersListing(offers)
-    }
-    fetchOffers()
-  }, [])
-  // plcaes for Rent
   const [rentListing, setRentListing] = useState(null)
-  useEffect(() => {
-    async function fetchOffers() {
-      // get reference to the offers collection
-      const listingRef = collection(db, 'listings')
-      // query to get the latest 4 offers
-      const q = query(listingRef, where('type', '==', "rent"),
-      orderBy('timeStamp', 'desc'),      
-      limit(4))
-      // querySnapshot is an array of documents in the collection that satisfy the condition of the query.
-      const querySnapshot = await getDocs(q)
-      let listing = []
-      querySnapshot.forEach((doc) => {
-        return listing.push({
-          id: doc.id,
-          data: doc.data(),
-        })
-      })
-      setRentListing(listing)
-    }
-    fetchOffers()
-  }, [])
-  // plcaes for sale
   const [saleListing, setSaleListing] = useState(null)
+  const { savedIds, toggleSave } = useSavedListings()
+  const [refRent, inViewRent] = useInView({ triggerOnce: true, threshold: 0.1 })
+  const [refSale, inViewSale] = useInView({ triggerOnce: true, threshold: 0.1 })
+
+  function normalize(listings) {
+    return listings.map((l) => ({ id: l._id, data: l }))
+  }
+
   useEffect(() => {
-    async function fetchOffers() {
-      // get reference to the offers collection
-      const listingRef = collection(db, 'listings')
-      // query to get the latest 4 offers
-      const q = query(listingRef, where('type', '==', "sale"),
-      orderBy('timeStamp', 'desc'),      
-      limit(4))
-      // querySnapshot is an array of documents in the collection that satisfy the condition of the query.
-      const querySnapshot = await getDocs(q)
-      let listing = []
-      querySnapshot.forEach((doc) => {
-        return listing.push({
-          id: doc.id,
-          data: doc.data(),
-        })
-      })
-      setSaleListing(listing)
-    }
-    fetchOffers()
+    api.get('/listings', { params: { offer: true, limit: 4 } })
+      .then((r) => setOffersListing(normalize(r.data.listings)))
+      .catch(() => {})
   }, [])
-  // plcaes for rent
-  const [ref, inView] = useInView({
-    triggerOnce: true, // Animation triggers only once
-    threshold: 0.1, // Trigger animation when 10% of the element is visible
-  });
-  // for Sale
-    const [targetref, inView1] = useInView({
-      triggerOnce: true, // Animation triggers only once
-      threshold: 0.1, // Trigger animation when 10% of the element is visible
-    });
 
+  useEffect(() => {
+    api.get('/listings', { params: { type: 'rent', limit: 4 } })
+      .then((r) => setRentListing(normalize(r.data.listings)))
+      .catch(() => {})
+  }, [])
 
-    const animationVariants = {
-      visible: { opacity: 1, x: 0 },
-      hidden: { opacity: 0, x: -100 },
-    };
+  useEffect(() => {
+    api.get('/listings', { params: { type: 'sale', limit: 4 } })
+      .then((r) => setSaleListing(normalize(r.data.listings)))
+      .catch(() => {})
+  }, [])
 
   return (
     <div>
       <Slider />
-      <div className='max-w-6xl pt-4 mx-auto space-y-6'>
-        {
-          offersListing && offersListing.length > 0 && (
-            <div className='m-2 mb-4 '>
-          <button type="submit" className='py-3 mt-4 ml-3 text-sm font-medium text-white uppercase transition duration-150 ease-in-out bg-blue-600 rounded shadow-md px-7 hover:bg-blue-800 hover:shadow-lg' >
-            <Link to="/create-listing " className='flex items-center justify-center '>
-              <FaHome className='p-1 mr-2 text-3xl border-2 rounded-full animate-pulse' />
-              Sell or rent your property
+      <div className="max-w-6xl pt-4 mx-auto space-y-6 pb-10">
+        {offersListing && offersListing.length > 0 && (
+          <div className="m-2 mb-4">
+            <Link to="/create-listing">
+              <button className="flex items-center mt-4 ml-3 bg-primary hover:bg-primary-hover text-white font-semibold text-sm px-5 py-2.5 rounded-lg shadow-md transition duration-150">
+                <FaHome className="mr-2 text-xl" /> Sell or rent your property
+              </button>
             </Link>
-          </button>
-              <motion.h2 className='px-3 mt-6 text-2xl font-semibold dark:text-teal-400'
-                initial={{ opacity: 0, x: -100 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.9 }}
-              > Recent Offers</motion.h2>
-              <Link to='/offers' >
-                <p className='px-3 text-sm text-blue-600 transition ease-in-out text-start hover:text-blue-700 animate-pulse'>Show more offers</p>
-              </Link>
-              <motion.ul className='sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' initial={{ opacity: 0, x: 100 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.9 }} >
-                {
-                  offersListing.map((listing) => (
-                    <ListingItem key={listing.id} listing={listing.data}  id={listing.id
-                    }/>
-                  ))
-                }
-              </motion.ul>
+            <motion.h2
+              className="px-3 mt-6 text-2xl font-semibold text-content-primary dark:text-white"
+              initial={{ opacity: 0, x: -60 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7 }}
+            >
+              Recent Offers
+            </motion.h2>
+            <Link to="/offers">
+              <p className="px-3 text-sm text-primary hover:text-primary-hover transition-colors animate-pulse">Show more offers</p>
+            </Link>
+            <motion.ul
+              className="sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+              initial={{ opacity: 0, x: 60 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7 }}
+            >
+              {offersListing.map((listing) => (
+                <ListingItem key={listing.id} listing={listing.data} id={listing.id} savedIds={savedIds} toggleSave={toggleSave} />
+              ))}
+            </motion.ul>
+          </div>
+        )}
 
-            </div>
-          )
-        }
-        {
-          rentListing && rentListing.length > 0 && (
-            <div className='m-2 mb-4 ' ref={ref}>
-              <motion.h2 className='px-3 mt-6 text-2xl font-semibold dark:text-teal-400' initial="hidden"
-                  animate={inView ? 'visible' : 'hidden'}
-                  variants={animationVariants}
-                  transition={{ duration: 0.8 }}>Places for Rent </motion.h2>
-              <Link to='/category/rent' >
-                <p className='px-3 text-sm text-blue-600 transition ease-in-out hover:text-blue-700 animate-pulse'>Show more places for rent</p>
-              </Link>
-              <motion.ul className='sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' initial="hidden"
-                  animate={inView ? 'visible' : 'hidden'}
-                  variants={animationVariants}
-                  transition={{ duration: 0.8 }}>
-                {
-                  rentListing.map((listing) => (
-                    <ListingItem key={listing.id} listing={listing.data}  id={listing.id
-                    }/>
-                  ))
-                }
-              </motion.ul>
+        {rentListing && rentListing.length > 0 && (
+          <Section
+            title="Places for Rent"
+            to="/category/rent"
+            label="Show more places for rent"
+            listings={rentListing}
+            motionRef={refRent}
+            inView={inViewRent}
+            savedIds={savedIds}
+            toggleSave={toggleSave}
+          />
+        )}
 
-            </div>
-          )
-        }
-        {
-          saleListing && saleListing.length > 0 && (
-            <div className='m-2 mb-4 ' ref={targetref} >
-              <motion.h2 className='px-3 mt-6 text-2xl font-semibold dark:text-teal-400' initial="hidden"
-                  animate={inView1 ? 'visible' : 'hidden'}
-                  variants={animationVariants}
-                  transition={{ duration: 0.8 }}>Places for Sale </motion.h2>
-              <Link to='/category/sale' >
-                <p className='px-3 text-sm text-blue-600 transition duration-300 ease-in-out hover:text-blue-700 animate-pulse'>Show more places for sale</p>
-              </Link>
-              <motion.ul className='sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' initial="hidden"
-                  animate={inView1 ? 'visible' : 'hidden'}
-                  variants={animationVariants}
-                  transition={{ duration: 0.8 }} >
-                {
-                  saleListing.map((listing) => (
-                    <ListingItem key={listing.id} listing={listing.data}  id={listing.id
-                    }/>
-                  ))
-                }
-              </motion.ul>
-
-            </div>
-          )
-        }
+        {saleListing && saleListing.length > 0 && (
+          <Section
+            title="Places for Sale"
+            to="/category/sale"
+            label="Show more places for sale"
+            listings={saleListing}
+            motionRef={refSale}
+            inView={inViewSale}
+            savedIds={savedIds}
+            toggleSave={toggleSave}
+          />
+        )}
       </div>
     </div>
   )

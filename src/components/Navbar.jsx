@@ -1,90 +1,155 @@
-import { getAuth, onAuthStateChanged } from 'firebase/auth'
-import React, { useEffect, useState } from 'react'
-import {useLocation , Link} from "react-router-dom"
-import {BsFillMoonStarsFill,BsSun} from "react-icons/bs"
+import { useEffect, useState } from 'react'
+import { useLocation, Link, useNavigate } from "react-router-dom"
+import { BsFillMoonStarsFill, BsSun } from "react-icons/bs"
+import { FaSearch, FaHeart } from "react-icons/fa"
+import { useAuth } from '../context/AuthContext'
+
 const Navbar = () => {
-    const[pageState,setPageState]=useState("Sign in")
-    const [theme, setTheme] = useState(null)
-    const location=useLocation()
-    const auth =getAuth();
-    useEffect(() => {
-      if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
-        setTheme('dark')
-      }else{
-        setTheme('light')
-      }
-      const localTheme = window.localStorage.getItem('theme')
-      localTheme && setTheme(localTheme)
-    }, [])
-    useEffect(() => {
-      if (theme === 'light') {
-        document.documentElement.classList.remove('dark')
-        document.documentElement.classList.add('light')
-      }
-      if (theme === 'dark') {
-        document.documentElement.classList.remove('light')
-        document.documentElement.classList.add('dark')
-      }
-     
-    }, [theme])
-// handele the theme
-    const handleTheme = () => {
-      if (theme === 'light') {
-        setTheme('dark')
-        window.localStorage.setItem('theme', 'dark')
-      } else {
-        setTheme('light')
-        window.localStorage.setItem('theme', 'light')
-      }
-    }
+  const { user } = useAuth()
+  const loggedIn = !!user
+  const pageState = user ? "Profile" : "Sign in"
+  const [theme, setTheme] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const location = useLocation()
+  const navigate = useNavigate()
 
-    useEffect(()=>{ 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-              setPageState("Profile")
-            } else {
-              setPageState("Sign in")
-            }
-          });
-    },[auth])
+  useEffect(() => {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const localTheme = window.localStorage.getItem('theme')
+    setTheme(localTheme ?? (prefersDark ? 'dark' : 'light'))
+  }, [])
 
-    function pathMatchRoute(route){
-      if(route === location.pathname){
-          return true
-        }
+  useEffect(() => {
+    if (theme === 'light') {
+      document.documentElement.classList.remove('dark')
+      document.documentElement.classList.add('light')
     }
+    if (theme === 'dark') {
+      document.documentElement.classList.remove('light')
+      document.documentElement.classList.add('dark')
+    }
+  }, [theme])
+
+  const handleTheme = () => {
+    const next = theme === 'light' ? 'dark' : 'light'
+    setTheme(next)
+    window.localStorage.setItem('theme', next)
+  }
+
+  function pathMatchRoute(route) {
+    return route === location.pathname
+  }
+
+  function handleSearch(e) {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+      setSearchQuery('')
+      setSearchOpen(false)
+    }
+  }
+
   return (
-    <div className='sticky top-0 z-30 bg-white border-b shadow-sm dark:bg-black font-BarlowCondensed'>
-      <header className='flex items-center justify-between max-w-6xl px-3 mx-auto'>
-        <div>
-            <Link to={"/"}>
-              <p className='font-bold font-RampartOne dark:text-white'>Home
-               <span className='text-teal-400'>Finder</span>
-              </p>
-            </Link>
-        </div>
-        <div>
-            <ul className='flex space-x-10'>
-              <button onClick={handleTheme}  className='dark:text-white' >{
+    <div className="sticky top-0 z-30 bg-surface dark:bg-dark-bg border-b border-surface-border dark:border-dark-border shadow-sm font-BarlowCondensed">
+      <header className="flex items-center justify-between max-w-6xl px-3 mx-auto h-14 gap-4">
+        {/* Logo */}
+        <Link to="/" className="flex-shrink-0">
+          <p className="font-bold font-RampartOne text-content-primary dark:text-white">
+            Home<span className="text-primary">Finder</span>
+          </p>
+        </Link>
 
-                theme === 'light' ? (
-                  <>
-                  
-                 <BsFillMoonStarsFill className='text-lg'/>
-                  </>
-                ) : (
-                  <BsSun className='text-lg'/>
-                )
-              }</button>
-              <Link to={"/"}>  <li className={`py-3 text-sm font-semibold cursor-pointer text-gray-400 border-b-4  ${pathMatchRoute("/") && "text-black border-b-red-400"} `}>Home</li></Link>
-              <Link to={"/offers"}><li className={`py-3 text-sm font-semibold cursor-pointer text-gray-400 border-b-4  ${pathMatchRoute("/offers") && "text-black border-b-red-400"}`}>offers</li></Link>
-              {/* we are navigating to profile if the user is not registered he will navigate to sign in as we protected the navigation */}
-              <Link to={"/profile"}><li className={`py-3 text-sm font-semibold cursor-pointer text-gray-400 border-b-4  ${(pathMatchRoute("/sign-in") || pathMatchRoute("/profile")) &&  "text-black border-b-red-400"}`}>
-                {pageState}
-                </li></Link>
-            </ul>
-        </div>
+        {/* Search bar — desktop */}
+        <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-sm">
+          <div className="relative w-full">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted text-sm" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by name or area..."
+              className="w-full pl-9 pr-4 py-1.5 text-sm bg-surface-secondary dark:bg-dark-surface border border-surface-border dark:border-dark-border rounded-full text-content-primary dark:text-white focus:outline-none focus:ring-2 focus:ring-primary transition"
+            />
+          </div>
+        </form>
+
+        {/* Nav links */}
+        <ul className="flex items-center space-x-6">
+          {/* Mobile search toggle */}
+          <button
+            onClick={() => setSearchOpen(!searchOpen)}
+            className="md:hidden text-content-secondary dark:text-content-muted hover:text-primary transition-colors"
+            aria-label="Search"
+          >
+            <FaSearch className="text-base" />
+          </button>
+
+          <button onClick={handleTheme} className="text-content-secondary dark:text-content-muted hover:text-content-primary dark:hover:text-white transition-colors">
+            {theme === 'light' ? <BsFillMoonStarsFill className="text-lg" /> : <BsSun className="text-lg" />}
+          </button>
+
+          <Link to="/">
+            <li className={`py-3 text-sm font-semibold cursor-pointer border-b-[3px] transition-colors ${
+              pathMatchRoute("/")
+                ? "text-content-primary dark:text-white border-primary"
+                : "text-content-secondary dark:text-content-muted border-transparent hover:text-content-primary dark:hover:text-white"
+            }`}>
+              Home
+            </li>
+          </Link>
+
+          <Link to="/offers">
+            <li className={`py-3 text-sm font-semibold cursor-pointer border-b-[3px] transition-colors ${
+              pathMatchRoute("/offers")
+                ? "text-content-primary dark:text-white border-primary"
+                : "text-content-secondary dark:text-content-muted border-transparent hover:text-content-primary dark:hover:text-white"
+            }`}>
+              Offers
+            </li>
+          </Link>
+
+          {loggedIn && (
+            <Link to="/saved" title="Saved Properties">
+              <li className={`py-3 text-sm font-semibold cursor-pointer border-b-[3px] transition-colors flex items-center gap-1 ${
+                pathMatchRoute("/saved")
+                  ? "text-content-primary dark:text-white border-primary"
+                  : "text-content-secondary dark:text-content-muted border-transparent hover:text-content-primary dark:hover:text-white"
+              }`}>
+                <FaHeart className="text-primary text-xs" />
+                Saved
+              </li>
+            </Link>
+          )}
+
+          <Link to="/profile">
+            <li className={`py-3 text-sm font-semibold cursor-pointer border-b-[3px] transition-colors ${
+              (pathMatchRoute("/sign-in") || pathMatchRoute("/profile"))
+                ? "text-content-primary dark:text-white border-primary"
+                : "text-content-secondary dark:text-content-muted border-transparent hover:text-content-primary dark:hover:text-white"
+            }`}>
+              {pageState}
+            </li>
+          </Link>
+        </ul>
       </header>
+
+      {/* Mobile search bar — expands below header */}
+      {searchOpen && (
+        <form onSubmit={handleSearch} className="md:hidden px-3 pb-3">
+          <div className="relative">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted text-sm" />
+            <input
+              autoFocus
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by name or area..."
+              className="w-full pl-9 pr-4 py-2 text-sm bg-surface-secondary dark:bg-dark-surface border border-surface-border dark:border-dark-border rounded-full text-content-primary dark:text-white focus:outline-none focus:ring-2 focus:ring-primary transition"
+            />
+          </div>
+        </form>
+      )}
     </div>
   )
 }

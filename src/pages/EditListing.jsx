@@ -1,328 +1,199 @@
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { toast } from 'react-toastify'
+import { motion } from 'framer-motion'
+import Spinner from '../components/Spinner'
+import api from '../utils/api'
 
-import { useEffect, useState } from "react"
-import Spinner from "../components/Spinner"
-import { toast } from "react-toastify"
-import {getStorage, ref, uploadBytesResumable, getDownloadURL} from "firebase/storage"
-import { getAuth } from "firebase/auth"
-import{v4 as uuidv4} from "uuid"
-import { serverTimestamp ,updateDoc, getDoc, doc} from "firebase/firestore"
-import { db } from "../firebase"
-import { useNavigate, useParams } from "react-router-dom"
-import { motion } from "framer-motion"
+const LABEL_CLASS = "block text-sm font-semibold text-content-secondary dark:text-content-muted mb-1"
+const INPUT_CLASS = "block w-full mt-1 text-lg text-content-primary dark:text-white bg-surface dark:bg-dark-surface border border-surface-border dark:border-dark-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition duration-150"
+const TOGGLE_ACTIVE = "px-7 py-3 font-semibold text-sm uppercase shadow-md rounded-lg transition duration-100 ease-in-out w-full bg-primary text-white"
+const TOGGLE_INACTIVE = "px-7 py-3 font-semibold text-sm uppercase shadow-md rounded-lg transition duration-100 ease-in-out w-full bg-surface dark:bg-dark-surface border border-surface-border dark:border-dark-border text-content-secondary dark:text-content-muted hover:bg-surface-secondary"
+const PROPERTY_TYPES = ['house', 'apartment', 'villa', 'plot', 'pg']
+
 const EditListing = () => {
   const navigate = useNavigate()
-  const auth = getAuth()
-  const [loading, setLoading] = useState(false)  
-  const[listing, setListing] = useState(null)
-  const[formdata, setFormdata] =useState({
-    type: 'rent',
-    name: '',
-    bedrooms: 1,
-    bathrooms: 1,
-    parking: false,
-    furnished : false,
-    address: '',
-    description: '',
-    offer: true,
-    regularprice: 0,
-    discountedprice: 0,
-    images:{}
-  })
-  const { type,
-    name ,
-    bedrooms ,
-    bathrooms,
-    parking,
-    furnished ,
-    address,
-    description,
-    offer,
-    regularprice,
-    discountedprice,
-    images
-  } = formdata
+  const params = useParams()
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [images, setImages] = useState(null)
+  const [formdata, setFormdata] = useState(null)
 
-const params = useParams()
-// to not allow user to edit listing if he is not the owner of listing
-useEffect(() => {
-  if(listing && listing.userRef !== auth.currentUser.uid){
-    toast.error("You are not authorized to edit this listing")
-    navigate("/")
-  } 
-}, [auth.currentUser.uid, listing, navigate, params.listingId])
+  useEffect(() => {
+    api.get(`/listings/${params.listingId}`)
+      .then((res) => setFormdata(res.data.listing))
+      .catch(() => { toast.error('Listing not found'); navigate('/') })
+      .finally(() => setLoading(false))
+  }, [params.listingId])
 
-// fetch listing from firestore
-useEffect(() => {
-    setLoading(true);
-    async function fetchListing() {
-      const docRef = doc(db, "listings", params.listingId);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setListing(docSnap.data());
-        setFormdata({ ...docSnap.data() });
-        setLoading(false);
-      } else {
-        navigate("/");
-        toast.error("Listing does not exist");
-      }
-    }
-    fetchListing();
-  }, [navigate, params.listingId]);
-
-
-async  function onChange(e) {
-    let boolean =null;
-    // if value is true or false then convert it to boolean
-    if(e.target.value==="true"){
-      boolean=true
-    }
-    else if(e.target.value==="false"){
-      boolean=false
-    }
-    // for images
-    if (e.target.files){
-      setFormdata((prevState)=>({
-        ...prevState,
-        images:e.target.files
-      }))
-    }
-    // for other inputs
-    if(!e.target.files){
-      setFormdata((prevState)=>({
-        ...prevState,
-        [e.target.id]:boolean ?? e.target.value
-      }))
+  function onChange(e) {
+    let boolean = null
+    if (e.target.value === 'true') boolean = true
+    else if (e.target.value === 'false') boolean = false
+    if (e.target.files) {
+      setImages(e.target.files)
+    } else {
+      setFormdata((prev) => ({ ...prev, [e.target.id]: boolean ?? e.target.value }))
     }
   }
 
-  
-async function onSubmit(e) {
+  async function onSubmit(e) {
     e.preventDefault()
-    setLoading(true)
-    // + is used to convert string to number
-    if(+discountedprice >= +regularprice){
-      setLoading(false)
-      toast.error("Discounted price cannot be greater than regular price")
-      return 
-    }
-    if(offer && discountedprice === 0){
-      setLoading(false)
-      toast.error("Discounted price cannot be zero")
-      return 
-    }
-    if(images.length > 6){
-      setLoading(false)
-      toast.error("You can upload maximum 6 images")
+    const { offer, discountedprice, regularprice } = formdata
+
+    if (offer && +discountedprice >= +regularprice) {
+      toast.error('Discounted price must be less than regular price')
       return
     }
-     // to see images not bigger than 2mb 
-     for(let i=0; i<images.length; i++){
-      if(images[i].size > 2 * 1024 * 1024){
-        setLoading(false)
-        toast.error("Image size cannot be greater than 2mb")
-        return
+    if (images) {
+      if (images.length > 6) { toast.error('Maximum 6 images allowed'); return }
+      for (let i = 0; i < images.length; i++) {
+        if (images[i].size > 2 * 1024 * 1024) { toast.error('Each image must be under 2MB'); return }
       }
     }
-    // function to store images in firebase storage
-    async function storeImage(image){
-      return new Promise((resolve, reject) => {
-          const storage = getStorage()
-          // filename = uid-imageName-uuid
-          // uuid is used to make filename unique if user uploads same image
-          const filename =`$(auth.currentUser.uid)-${image.name}-${uuidv4()}`
-          // store image in firebase storage
-          const storageRef = ref(storage, `images/${filename}`)
-          // upload image
-          const uploadTask = uploadBytesResumable(storageRef, image)
-          // snapshot is used to get progress of image upload
-          uploadTask.on('state_changed',
-          (snapshot) => {
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-          }
-          ,(error) => {
-            reject(error)
-          }
-          // download url is used to get url of image stored in firebase storage
-          ,() => {
-            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-              resolve(downloadURL)
-            })
-          }
-          )
-      });
+
+    setSubmitting(true)
+    try {
+      const fd = new FormData()
+      const { _id, owner, __v, avgRating, reviewCount, createdAt, updatedAt, ...fields } = formdata
+      Object.entries(fields).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && !Array.isArray(v)) fd.append(k, v)
+      })
+      if (!formdata.offer) fd.delete('discountedprice')
+      if (images) {
+        for (let i = 0; i < images.length; i++) fd.append('images', images[i])
+      }
+
+      const res = await api.put(`/listings/${params.listingId}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      toast.success('Listing updated!')
+      navigate(`/category/${res.data.listing.type}/${res.data.listing._id}`)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not update listing')
     }
-    // imgageUrls is array of urls of images stored in firebase storage
-    const imgUrls = await Promise.all(
-      [...images].map((image) => storeImage(image))
-    ).catch((error) => {
-      setLoading(false);
-      toast.error("Images not uploaded");
-      return;
-    });
-  
-    // formdatacopy to store data in firestore
-    const formDatacopy = {
-      ...formdata,
-      imgUrls,
-      timeStamp: serverTimestamp(),
-      userRef: auth.currentUser.uid,
-    };
-    delete formDatacopy.images;
-    // if offer is false then delete discounted price
-    !formDatacopy.offer && delete formDatacopy.discountedprice;
-
-    // add listing to firestore
-    const docRef = doc(db, "listings", params.listingId);
-    await updateDoc(docRef, formDatacopy);
-      setLoading(false)
-      toast.success("Listing Edited successfully")
-      navigate(`/category/${formDatacopy.type}/${docRef.id}`)
+    setSubmitting(false)
   }
 
-  if(loading){
-    return <Spinner/>
-  }
+  if (loading || !formdata) return <Spinner />
+
+  const { type, propertyType, name, bedrooms, bathrooms, area, parking, furnished, address, description, phone, offer, regularprice, discountedprice } = formdata
+
   return (
-    <main className='max-w-md px-2 mx-auto'>
-        <motion.h1 className='mt-6 text-3xl font-bold text-center dark:text-teal-400'  initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}>Edit Listing </motion.h1>
-        <form onSubmit={onSubmit} >
-          <p className='mt-6 text-lg font-semibold dark:text-white'>Sell / Rent </p>
-          <div className='flex '>
-            <button type='button' id='type' value="sale" onClick={onChange} className={`px-7 py-3 mr-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg focus:shadow-lg active:shadow-xl transition duration-100 ease-in-out w-full ${
-              type === 'rent' ? 'bg-gray-200 text-gray-500' : 'bg-slate-600 text-gray-900'
-            }`}>
-              sell
-            </button>
-            <button type='button' id='type' value="rent" onClick={onChange} className={`px-7 py-3 ml-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg focus:shadow-lg active:shadow-xl transition duration-100 ease-in-out w-full ${
-              type === 'sale' ? 'bg-gray-200 text-gray-500' : 'bg-slate-600 text-gray-900'
-            }`}>
-              rent
-            </button>
-          </div>
-          <div className='mt-6'>
-            <label htmlFor='name' className='block text-sm font-medium text-gray-700 dark:text-white'>
-              Name
-            </label>
-            <input type='text' name='name' id='name' value={name} onChange={onChange} className='block w-full mt-1 text-xl border-gray-300 rounded-md shadow-sm focus:ring-slate-600 focus:border-slate-600 sm:text-sm'placeholder="Name of the House" maxLength="32"minLength="10" required />
-          </div>
-          <div className='flex mt-6 space-x-2'>
-            {/* label for beds  */}
-            <div>
-              <label htmlFor='bedrooms' className='block text-sm font-medium text-gray-700 dark:text-white'>  
-                Beds
-              </label>
-              <input type='number' name='bedrooms' id='bedrooms' value={bedrooms} onChange={onChange} className='block w-full mt-1 text-xl transition duration-150 ease-in-out border-gray-300 rounded-md shadow-sm focus:ring-slate-600 focus:border-slate-600 sm:text-sm'placeholder="Beds" maxLength="50" minLength="1" required />    
-            </div>
-            {/* label for baths  */}
-            <div>
-              <label htmlFor='bathrooms' className='block text-sm font-medium text-gray-700 dark:text-white'>  
-                Baths
-                </label> 
-              <input type='number' name='bathrooms' id='bathrooms' value={bathrooms} onChange={onChange} className='block w-full mt-1 text-xl transition duration-150 ease-in-out border-gray-300 rounded-md shadow-sm focus:ring-slate-600 focus:border-slate-600 sm:text-sm'placeholder="Beds" maxLength="50" minLength="1" required />    
-            </div>
-          </div>  
+    <main className="max-w-md px-2 mx-auto pb-10">
+      <motion.h1 className="mt-6 text-3xl font-bold text-center text-content-primary dark:text-white" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        Edit Listing
+      </motion.h1>
 
-          <p className='mt-6 text-lg font-semibold dark:text-white'> Parking Spot </p>
-          <div className='flex '>
-            <button type='button' id='parking' value={true} onClick={onChange} className={`px-7 py-3 mr-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg focus:shadow-lg active:shadow-xl transition duration-100 ease-in-out w-full ${
-            !parking ? 'bg-gray-200 text-gray-500' : 'bg-slate-600 text-gray-900'
-            }`}>
-              Yes 
-            </button>
-            <button type='button' id='parking' value={false} onClick={onChange} className={`px-7 py-3 ml-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg focus:shadow-lg active:shadow-xl transition duration-100 ease-in-out w-full ${
-            parking ? 'bg-gray-200 text-gray-500' : 'bg-slate-600 text-gray-900'
-            }`}>
-              No
-            </button>
+      <form onSubmit={onSubmit} className="mt-6 space-y-5">
+        <div>
+          <p className={LABEL_CLASS}>Sell / Rent</p>
+          <div className="flex gap-3">
+            <button type="button" id="type" value="sale" onClick={onChange} className={type === 'sale' ? TOGGLE_ACTIVE : TOGGLE_INACTIVE}>Sell</button>
+            <button type="button" id="type" value="rent" onClick={onChange} className={type === 'rent' ? TOGGLE_ACTIVE : TOGGLE_INACTIVE}>Rent</button>
           </div>
+        </div>
 
-          <p className='mt-6 text-lg font-semibold dark:text-white'>Furnished </p>
-          <div className='flex '>
-            <button type='button' id='furnished' value={true} onClick={onChange} className={`px-7 py-3 mr-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg focus:shadow-lg active:shadow-xl transition duration-100 ease-in-out w-full ${
-            !furnished ? 'bg-gray-200 text-gray-500' : 'bg-slate-600 text-gray-900'
-            }`}>
-              Yes
-            </button>
-            <button type='button' id='furnished' value={false} onClick={onChange} className={`px-7 py-3 ml-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg focus:shadow-lg active:shadow-xl transition duration-100 ease-in-out w-full ${
-            furnished ? 'bg-gray-200 text-gray-500' : 'bg-slate-600 text-gray-900'
-            }`}>
-              No
-            </button>
+        <div>
+          <p className={LABEL_CLASS}>Property Type</p>
+          <div className="flex flex-wrap gap-2">
+            {PROPERTY_TYPES.map((pt) => (
+              <button key={pt} type="button" id="propertyType" value={pt} onClick={onChange}
+                className={`px-4 py-2 text-sm font-semibold uppercase rounded-lg border transition duration-100 ${propertyType === pt ? 'bg-primary text-white border-primary' : 'bg-surface dark:bg-dark-surface border-surface-border dark:border-dark-border text-content-secondary dark:text-content-muted hover:bg-surface-secondary'}`}>
+                {pt === 'pg' ? 'PG' : pt.charAt(0).toUpperCase() + pt.slice(1)}
+              </button>
+            ))}
           </div>
+        </div>
 
-          <div className='mt-6'>
-            <label htmlFor='address' className='block text-xl font-medium text-gray-700 dark:text-white'>
-              Address
-            </label>
-            <textarea type='text' name='address' id='address' value={address} onChange={onChange} className='block w-full mt-1 text-xl transition duration-150 ease-in-out border-gray-300 rounded-md shadow-sm focus:ring-slate-600 focus:border-slate-600 sm:text-sm'placeholder="Address"  />
-        
-            <label htmlFor='description' className='block text-xl font-medium text-gray-700 dark:text-white'>
-            Description
-            </label>
-            <textarea type='text' name='description' id='description' value={description} onChange={onChange} className='block w-full mt-1 text-xl transition duration-150 ease-in-out border-gray-300 rounded-md shadow-sm focus:ring-slate-600 focus:border-slate-600 sm:text-sm'placeholder="Description"  />
+        <div>
+          <label htmlFor="name" className={LABEL_CLASS}>Name</label>
+          <input type="text" id="name" value={name || ''} onChange={onChange} className={INPUT_CLASS} maxLength="32" minLength="10" required />
+        </div>
+
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <label htmlFor="bedrooms" className={LABEL_CLASS}>Beds</label>
+            <input type="number" id="bedrooms" value={bedrooms || 1} onChange={onChange} className={INPUT_CLASS} min="1" max="50" required />
           </div>
-          
-          <p className='mt-3 text-lg font-semibold dark:text-white'>Offer </p>
-          <div className='flex '>
-            <button type='button' id='offer' value={true} onClick={onChange} className={`px-7 py-3 mr-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg focus:shadow-lg active:shadow-xl transition duration-100 ease-in-out w-full ${
-            !offer ? 'bg-gray-200 text-gray-500' : 'bg-slate-600 text-gray-900'
-            }`}>
-              Yes
-            </button>
-            <button type='button' id='offer' value={false} onClick={onChange} className={`px-7 py-3 ml-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg focus:shadow-lg active:shadow-xl transition duration-100 ease-in-out w-full ${
-            offer ? 'bg-gray-200 text-gray-500' : 'bg-slate-600 text-gray-900'
-            }`}>
-              No
-            </button>
+          <div className="flex-1">
+            <label htmlFor="bathrooms" className={LABEL_CLASS}>Baths</label>
+            <input type="number" id="bathrooms" value={bathrooms || 1} onChange={onChange} className={INPUT_CLASS} min="1" max="50" required />
           </div>
-          <div className="flex flex-col items-start mt-3 mb-2 ">
-            <label htmlFor='regularprice' className='block text-xl font-medium text-gray-700 dark:text-white'>
-                      Regular  Price
-                    </label>
-            <div className="flex items-center justify-center space-x-6">
-              <input type='number' name='regularprice' id='regularprice' value={regularprice} onChange={onChange} className='block w-full mt-1 text-lg transition duration-150 ease-in-out border-gray-300 rounded-md shadow-sm focus:ring-slate-600 focus:border-slate-600 sm:text-sm'placeholder="Price" min="5000"
-              max="10000000" required />
-              {
-              type === 'rent' && (
-                <div>
-                  <p className="w-full text-md whitespace-nowrap ">  <span className="text-xl font-semibold"> &#8377;</span>/Month</p>
-                </div>
-                ) }
-            </div>
+        </div>
+
+        <div>
+          <label htmlFor="area" className={LABEL_CLASS}>Area (sqft)</label>
+          <input type="number" id="area" value={area || ''} onChange={onChange} className={INPUT_CLASS} min="100" />
+        </div>
+
+        <div>
+          <p className={LABEL_CLASS}>Parking Spot</p>
+          <div className="flex gap-3">
+            <button type="button" id="parking" value="true" onClick={onChange} className={parking ? TOGGLE_ACTIVE : TOGGLE_INACTIVE}>Yes</button>
+            <button type="button" id="parking" value="false" onClick={onChange} className={!parking ? TOGGLE_ACTIVE : TOGGLE_INACTIVE}>No</button>
           </div>
-          {
-            offer && (
-              <div className="flex flex-col items-start mt-3 mb-2">
-              <label htmlFor='discountedprice' className='block text-xl font-medium text-gray-700 dark:text-white' >
-              Discounted Price
-                      </label>
-              <div className="flex items-center justify-center space-x-6">
-                <input type='number' name='discountedprice' id='discountedprice' value={discountedprice} onChange={onChange} className='block w-full mt-1 text-lg transition duration-150 ease-in-out border-gray-300 rounded-md shadow-sm focus:ring-slate-600 focus:border-slate-600 sm:text-sm'placeholder="Price" min="5000"
-                max="10000000" required={offer} />
-                {
-                type === 'rent' && (
-                  <div>
-                    <p className="w-full text-md whitespace-nowrap "><span className="text-xl font-semibold"> &#8377;</span> /Month</p>
-                  </div>
-                  ) }
-              </div>
-            </div>
-            )
-          }
+        </div>
+
+        <div>
+          <p className={LABEL_CLASS}>Furnished</p>
+          <div className="flex gap-3">
+            <button type="button" id="furnished" value="true" onClick={onChange} className={furnished ? TOGGLE_ACTIVE : TOGGLE_INACTIVE}>Yes</button>
+            <button type="button" id="furnished" value="false" onClick={onChange} className={!furnished ? TOGGLE_ACTIVE : TOGGLE_INACTIVE}>No</button>
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="address" className={LABEL_CLASS}>Address</label>
+          <textarea id="address" value={address || ''} onChange={onChange} className={INPUT_CLASS} rows={2} required />
+        </div>
+
+        <div>
+          <label htmlFor="description" className={LABEL_CLASS}>Description</label>
+          <textarea id="description" value={description || ''} onChange={onChange} className={INPUT_CLASS} rows={3} required />
+        </div>
+
+        <div>
+          <label htmlFor="phone" className={LABEL_CLASS}>Contact Phone (WhatsApp)</label>
+          <input type="tel" id="phone" value={phone || ''} onChange={onChange} className={INPUT_CLASS} maxLength="10" minLength="10" />
+        </div>
+
+        <div>
+          <p className={LABEL_CLASS}>Offer / Discount</p>
+          <div className="flex gap-3">
+            <button type="button" id="offer" value="true" onClick={onChange} className={offer ? TOGGLE_ACTIVE : TOGGLE_INACTIVE}>Yes</button>
+            <button type="button" id="offer" value="false" onClick={onChange} className={!offer ? TOGGLE_ACTIVE : TOGGLE_INACTIVE}>No</button>
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="regularprice" className={LABEL_CLASS}>Regular Price</label>
+          <div className="flex items-center gap-3">
+            <input type="number" id="regularprice" value={regularprice || 0} onChange={onChange} className={INPUT_CLASS} min="5000" max="100000000" required />
+            {type === 'rent' && <span className="whitespace-nowrap text-content-secondary dark:text-content-muted font-semibold">₹ / Month</span>}
+          </div>
+        </div>
+
+        {offer && (
           <div>
-            <label htmlFor='images' className='block text-xl font-medium text-gray-700 dark:text-white'>
-              Images
-            </label>
-            <p className="text-gray-600 dark:text-white">The first image will be cover (max 6) (less than 2MB)</p>
-            <input type='file' name='images' id='images' onChange={onChange} className='block w-full px-3 py-2 mt-1 text-xl transition duration-150 ease-in-out border-gray-300 rounded-md shadow-sm focus:ring-slate-600 focus:border-slate-600 sm:text-sm'placeholder="Image" multiple required  accept=".jpg,.png,.jpeg"/>
+            <label htmlFor="discountedprice" className={LABEL_CLASS}>Discounted Price</label>
+            <div className="flex items-center gap-3">
+              <input type="number" id="discountedprice" value={discountedprice || 0} onChange={onChange} className={INPUT_CLASS} min="5000" max="100000000" required />
+              {type === 'rent' && <span className="whitespace-nowrap text-content-secondary dark:text-content-muted font-semibold">₹ / Month</span>}
+            </div>
           </div>
-          <button type="submit" className="w-full py-3 mt-4 mb-6 text-sm font-medium text-white uppercase transition duration-150 ease-in-out bg-blue-600 rounded shadow-md px-7 hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg active:bg-blue-800 active:shadow-lg">
-            Edit Listing
-          </button>
-        </form>
+        )}
+
+        <div>
+          <label htmlFor="images" className={LABEL_CLASS}>Replace Images (optional)</label>
+          <p className="text-xs text-content-muted mb-1">Leave empty to keep existing images. Max 6, each under 2MB.</p>
+          <input type="file" id="images" onChange={onChange} className={INPUT_CLASS} multiple accept=".jpg,.png,.jpeg,.webp" />
+        </div>
+
+        <button type="submit" disabled={submitting} className="w-full py-3 text-sm font-semibold text-white uppercase bg-primary hover:bg-primary-hover rounded-lg shadow-md transition duration-150 disabled:opacity-60">
+          {submitting ? 'Saving…' : 'Save Changes'}
+        </button>
+      </form>
     </main>
   )
 }
+
 export default EditListing
