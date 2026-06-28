@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import Spinner from '../components/Spinner'
+import { useInView } from 'react-intersection-observer'
 import ListingItem from '../components/ListingItem'
+import { ListingCardSkeleton } from '../components/ListingCardSkeleton'
 import { useSavedListings } from '../hooks/useSavedListings'
 import api from '../utils/api'
 
@@ -15,12 +16,20 @@ const Category = () => {
   const [nextCursor, setNextCursor] = useState(null)
   const [loadingMore, setLoadingMore] = useState(false)
   const { savedIds, toggleSave } = useSavedListings()
+  const { ref: sentinelRef, inView } = useInView({ threshold: 0 })
 
   useEffect(() => {
     setListings([])
     setNextCursor(null)
     fetchListings()
   }, [params.categoryName])
+
+  useEffect(() => {
+    if (inView && hasMore && !loadingMore) {
+      setLoadingMore(true)
+      fetchListings(nextCursor)
+    }
+  }, [inView, hasMore, loadingMore])
 
   async function fetchListings(cursor = null) {
     try {
@@ -38,12 +47,6 @@ const Category = () => {
     setLoadingMore(false)
   }
 
-  async function loadMore() {
-    if (!nextCursor) return
-    setLoadingMore(true)
-    await fetchListings(nextCursor)
-  }
-
   const title = params.categoryName === 'rent' ? 'Places for Rent' : 'Places for Sale'
 
   return (
@@ -58,7 +61,9 @@ const Category = () => {
       </motion.h1>
 
       {loading ? (
-        <Spinner />
+        <ul className="sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => <ListingCardSkeleton key={i} />)}
+        </ul>
       ) : listings.length > 0 ? (
         <>
           <ul className="sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -66,15 +71,12 @@ const Category = () => {
               <ListingItem key={listing.id} listing={listing.data} id={listing.id} savedIds={savedIds} toggleSave={toggleSave} />
             ))}
           </ul>
-          {hasMore && (
-            <div className="flex items-center justify-center mt-8">
-              <button
-                onClick={loadMore}
-                disabled={loadingMore}
-                className="bg-primary hover:bg-primary-hover text-white font-semibold px-8 py-2.5 rounded-lg shadow-md transition duration-150 disabled:opacity-60"
-              >
-                {loadingMore ? 'Loading…' : 'Load more'}
-              </button>
+          <div ref={sentinelRef} className="h-4" />
+          {loadingMore && (
+            <div className="flex justify-center gap-1.5 py-6">
+              <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
+              <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
+              <span className="w-2 h-2 rounded-full bg-primary animate-bounce" />
             </div>
           )}
         </>

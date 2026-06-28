@@ -4,24 +4,32 @@
 
 HomeFinder is a property listing web app targeting the **Indian real estate market** (currency: ₹). Users can list, browse, search, and save properties for rent or sale. Inspired by Airbnb and MagicBricks.
 
-**Stack:** React 18 · Vite · Firebase 9 (Auth / Firestore / Storage) · Tailwind CSS 3 · Framer Motion · Swiper · React Router DOM 6
+**Frontend stack:** React 18 · Vite · Tailwind CSS 3 · Framer Motion · Swiper · React Router DOM 6 · axios  
+**Backend stack:** Node.js · Express 5 · MongoDB (Mongoose 8) · Cloudinary (images) · JWT (httpOnly cookies)
 
-**Project root:** `HomeFinder/` (Vite project)  
-**Entry:** `src/main.jsx` → `src/App.jsx`
+**Frontend root:** `HomeFinder/` (Vite project) — entry: `src/main.jsx` → `src/App.jsx`  
+**Backend root:** `homefinder-api/` — entry: `src/index.js`, runs on port 5000
 
 ---
 
 ## File Structure
 
 ```
-src/
-  pages/          # Full route pages (one file per route)
-  components/     # Reusable UI components
-  hooks/          # Custom hooks (prefixed with `use`)
-  utils/          # Pure helper functions (no React)
-  assets/         # Static images / SVGs
-  firebase.js     # Firebase app + db + auth exports
-  index.css       # Global styles + Tailwind directives
+HomeFinder/src/
+  pages/            # Full route pages (one file per route)
+  components/       # Reusable UI components
+  hooks/            # Custom hooks (prefixed with `use`)
+  utils/            # Pure helper functions (no React)
+  context/          # React context providers
+  assets/           # Static images / SVGs
+  index.css         # Global styles + Tailwind directives
+
+homefinder-api/src/
+  models/           # Mongoose models (User, Listing, Review, SavedListing)
+  routes/           # Express routers (auth, listings, reviews, saved)
+  middleware/       # auth.js (JWT protect), upload.js (Multer + Cloudinary)
+  utils/            # cloudinary.js config
+  index.js          # App entry — connects MongoDB, starts server
 ```
 
 ---
@@ -34,7 +42,7 @@ src/
 | Hook files | camelCase | `useAuthStatus.jsx` |
 | Util files | camelCase | `geocode.js` |
 | Route paths | kebab-case | `/create-listing` |
-| Firestore fields | camelCase | `regularprice`, `imgUrls` |
+| MongoDB fields | camelCase | `regularprice`, `imgUrls` |
 | CSS classes | Tailwind utility tokens only | see DLS section |
 
 ---
@@ -43,7 +51,7 @@ src/
 
 The palette is defined as semantic tokens in `tailwind.config.js`. **Never use hardcoded hex colors or Tailwind palette shades directly in components.** Use the semantic tokens below.
 
-> **Design source:** Synced from FLN Design System (`claude.ai/design/p/4fb260ae-0e31-45d8-af52-4adff0067449`). Primary = indigo, accent = orange, font = Plus Jakarta Sans.
+> **Design source:** Synced from FLN Design System. Primary = indigo, accent = orange, font = Plus Jakarta Sans.
 
 ### Color Tokens
 
@@ -64,7 +72,7 @@ The palette is defined as semantic tokens in `tailwind.config.js`. **Never use h
 
 ### Typography
 
-- **Body font:** Plus Jakarta Sans (system-ui fallback) — from FLN design system, applied via `font-sans` in Tailwind config
+- **Body font:** Plus Jakarta Sans (system-ui fallback) — applied via `font-sans` in Tailwind config
 - **Logo font:** `font-RampartOne`
 - **Condensed headings:** `font-BarlowCondensed`
 - **Price display:** `font-Bellefair`
@@ -90,17 +98,13 @@ The palette is defined as semantic tokens in `tailwind.config.js`. **Never use h
 
 ---
 
-## Firebase Patterns
+## API Patterns
 
-- **Always** use `serverTimestamp()` for `timeStamp` / `createdAt` fields.
-- **Always** set `userRef: auth.currentUser.uid` on user-owned documents.
-- Images: max **6 images**, max **2 MB each**. Upload to `images/` in Firebase Storage with filename `${uid}-${imageName}-${uuidv4()}`.
-- Firestore reads: prefer `getDocs` for lists, `getDoc` for single docs.
-- Firestore writes: use `addDoc` (auto-ID) for new docs, `setDoc` with merge for upserts, `updateDoc` for partial updates.
-- Subcollections pattern: `users/{uid}/savedListings/{listingId}`, `listings/{id}/reviews/{uid}`.
-- Do not use `onSnapshot` (real-time listeners) unless the feature genuinely needs live updates — prefer one-shot `getDocs`.
+All frontend API calls go through `src/utils/api.js` (axios instance with `baseURL: VITE_API_URL` and `withCredentials: true`).
 
-### Listing Document Shape
+Auth state lives in `src/context/AuthContext.jsx`. Use `useAuth()` to access `{ user, checkingStatus, login, register, logout, updateProfile, updatePassword }`.
+
+### Listing Document Shape (MongoDB)
 
 ```js
 {
@@ -118,27 +122,38 @@ The palette is defined as semantic tokens in `tailwind.config.js`. **Never use h
   offer: boolean,
   regularprice: number,  // in ₹
   discountedprice: number | undefined,
-  imgUrls: string[],
-  userRef: string,       // uid
-  timeStamp: Timestamp,
+  imgUrls: string[],     // Cloudinary URLs
+  owner: ObjectId,       // ref User
   avgRating: number,     // denormalized, updated on review write
   reviewCount: number,   // denormalized
 }
 ```
+
+### Pagination Pattern
+
+All list endpoints use cursor-based pagination with MongoDB `_id`:
+- Request: `?limit=8&cursor=<lastId>`
+- Response: `{ listings, hasMore, nextCursor }`
+- Frontend: fetch `limit + 1`, pop last, set `hasMore` and `nextCursor`
+
+### Image Uploads
+
+Use `FormData` with `Content-Type: multipart/form-data`. Max 6 images, 2MB each. Cloudinary handles storage and auto-resize.
 
 ---
 
 ## Component Conventions
 
 - **No prop drilling beyond 2 levels.** Lift state or use a hook.
+- `useAuth()` from `src/context/AuthContext.jsx` — auth state for all components.
 - `useAuthStatus` hook (`src/hooks/useAuthStatus.jsx`) returns `{ loggedIn, checkingStatus }` — use it to gate auth-only UI.
-- `useSavedListings` hook (`src/hooks/useSavedListings.jsx`) returns `{ savedIds, toggleSave, loading }`.
+- `useSavedListings` hook (`src/hooks/useSavedListings.jsx`) returns `{ savedIds, toggleSave }`.
 - Wrap page-level sections in `<motion.div>` from Framer Motion for entrance animations. Standard pattern:
   ```jsx
   initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
   ```
 - Show `<Spinner />` while async data is loading.
-- Show `<toast.error()>` / `<toast.success()>` for user feedback — never `alert()`.
+- Show `toast.error()` / `toast.success()` for user feedback — never `alert()`.
 - Protected routes use `<PrivateRoute />` wrapping pattern in `App.jsx`.
 
 ---
@@ -168,9 +183,9 @@ The palette is defined as semantic tokens in `tailwind.config.js`. **Never use h
 - **No inline `style={{}}` props** for colors/spacing — use Tailwind classes
 - **No `window.alert()`** — use `react-toastify` toasts
 - **No `console.log()` left in committed code**
-- **No `limit(4)` without a "Load More" button** — paginate with `startAfter`
+- **No Firebase** — the project has fully migrated to Node.js + MongoDB + Cloudinary
 - **No Google Maps** — use Leaflet + OpenStreetMap (free, no billing)
-- **No mocking Firebase** in tests — use the real Firestore emulator
+- **No skip/limit pagination** — use cursor-based pagination (`_id` as cursor) throughout
 
 ---
 
@@ -188,9 +203,9 @@ The palette is defined as semantic tokens in `tailwind.config.js`. **Never use h
 
 | Library | Purpose | Notes |
 |---------|---------|-------|
+| `axios` | API calls | Use instance from `src/utils/api.js` with `withCredentials: true` |
 | `react-leaflet` + `leaflet` | Map on listing detail | Geocode via Nominatim (free) |
-| `swiper` | Image carousels | Use `SwiperCore.use([Autoplay, Navigation, Pagination])` |
+| `swiper` | Image carousels | v9 — no `SwiperCore.use()`, no `navigation` prop |
 | `framer-motion` | Animations | Page entrances, list items |
 | `react-toastify` | Notifications | Theme: dark, position: bottom-center |
-| `react-moment` | Date formatting | Use `<Moment fromNow>` for relative times |
-| `uuid` | Unique filenames for storage | `v4 as uuidv4` |
+| `react-intersection-observer` | Infinite scroll / lazy load | Used in Home.jsx |

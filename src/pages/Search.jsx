@@ -2,8 +2,9 @@ import { useEffect, useState, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FaFilter, FaTimes } from 'react-icons/fa'
+import { useInView } from 'react-intersection-observer'
 import ListingItem from '../components/ListingItem'
-import Spinner from '../components/Spinner'
+import { ListingCardSkeleton } from '../components/ListingCardSkeleton'
 import { useSavedListings } from '../hooks/useSavedListings'
 import api from '../utils/api'
 
@@ -22,6 +23,7 @@ const Search = () => {
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
   const [showFilters, setShowFilters] = useState(false)
   const { savedIds, toggleSave } = useSavedListings()
+  const { ref: sentinelRef, inView } = useInView({ threshold: 0 })
 
   const buildParams = useCallback((cursor = null) => {
     const params = { limit: 12 }
@@ -51,18 +53,20 @@ const Search = () => {
       .finally(() => setLoading(false))
   }, [q, filters])
 
-  async function loadMore() {
-    if (!nextCursor) return
-    setLoadingMore(true)
-    const endpoint = q ? '/listings/search' : '/listings'
-    try {
-      const res = await api.get(endpoint, { params: buildParams(nextCursor) })
-      setListings((prev) => [...prev, ...res.data.listings.map((l) => ({ id: l._id, data: l }))])
-      setHasMore(res.data.hasMore)
-      setNextCursor(res.data.nextCursor)
-    } catch {}
-    setLoadingMore(false)
-  }
+  useEffect(() => {
+    if (inView && hasMore && !loadingMore) {
+      setLoadingMore(true)
+      const endpoint = q ? '/listings/search' : '/listings'
+      api.get(endpoint, { params: buildParams(nextCursor) })
+        .then((res) => {
+          setListings((prev) => [...prev, ...res.data.listings.map((l) => ({ id: l._id, data: l }))])
+          setHasMore(res.data.hasMore)
+          setNextCursor(res.data.nextCursor)
+        })
+        .catch(() => {})
+        .finally(() => setLoadingMore(false))
+    }
+  }, [inView, hasMore, loadingMore])
 
   function togglePropertyType(pt) {
     setFilters((prev) => {
@@ -148,7 +152,9 @@ const Search = () => {
           {showFilters && <div className="lg:hidden mb-4"><FilterPanel /></div>}
 
           {loading ? (
-            <Spinner />
+            <motion.ul className="sm:grid sm:grid-cols-2 xl:grid-cols-3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+              {Array.from({ length: 12 }).map((_, i) => <ListingCardSkeleton key={i} />)}
+            </motion.ul>
           ) : listings.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <p className="text-4xl mb-4">🏠</p>
@@ -163,11 +169,12 @@ const Search = () => {
                   <ListingItem key={listing.id} listing={listing.data} id={listing.id} savedIds={savedIds} toggleSave={toggleSave} />
                 ))}
               </motion.ul>
-              {hasMore && (
-                <div className="flex justify-center mt-8">
-                  <button onClick={loadMore} disabled={loadingMore} className="bg-primary hover:bg-primary-hover text-white font-semibold px-8 py-2.5 rounded-lg shadow-md transition duration-150 disabled:opacity-60">
-                    {loadingMore ? 'Loading…' : 'Load more'}
-                  </button>
+              <div ref={sentinelRef} className="h-4" />
+              {loadingMore && (
+                <div className="flex justify-center gap-1.5 py-6">
+                  <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
+                  <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
+                  <span className="w-2 h-2 rounded-full bg-primary animate-bounce" />
                 </div>
               )}
             </>

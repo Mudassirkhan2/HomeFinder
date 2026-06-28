@@ -75,62 +75,67 @@ const Navbar = () => {
         </form>
 
         {/* Nav links */}
-        <ul className="flex items-center space-x-6">
+        <ul className="flex items-center gap-4 md:gap-6">
           {/* Mobile search toggle */}
-          <button
-            onClick={() => setSearchOpen(!searchOpen)}
-            className="md:hidden text-content-secondary dark:text-content-muted hover:text-primary transition-colors"
-            aria-label="Search"
-          >
-            <FaSearch className="text-base" />
-          </button>
+          <li className="md:hidden">
+            <button
+              onClick={() => setSearchOpen(!searchOpen)}
+              className="text-content-secondary dark:text-content-muted hover:text-primary transition-colors"
+              aria-label="Search"
+            >
+              <FaSearch className="text-base" />
+            </button>
+          </li>
 
-          <button onClick={handleTheme} className="text-content-secondary dark:text-content-muted hover:text-content-primary dark:hover:text-white transition-colors">
-            {theme === 'light' ? <BsFillMoonStarsFill className="text-lg" /> : <BsSun className="text-lg" />}
-          </button>
+          <li>
+            <button onClick={handleTheme} className="text-content-secondary dark:text-content-muted hover:text-content-primary dark:hover:text-white transition-colors">
+              {theme === 'light' ? <BsFillMoonStarsFill className="text-lg" /> : <BsSun className="text-lg" />}
+            </button>
+          </li>
 
-          <Link to="/">
-            <li className={`py-3 text-sm font-semibold cursor-pointer border-b-[3px] transition-colors ${
+          {/* Desktop-only nav links — bottom tab bar handles mobile */}
+          <li className="hidden md:block">
+            <Link to="/" className={`py-3 text-sm font-semibold border-b-[3px] transition-colors ${
               pathMatchRoute("/")
                 ? "text-content-primary dark:text-white border-primary"
                 : "text-content-secondary dark:text-content-muted border-transparent hover:text-content-primary dark:hover:text-white"
             }`}>
               Home
-            </li>
-          </Link>
+            </Link>
+          </li>
 
-          <Link to="/offers">
-            <li className={`py-3 text-sm font-semibold cursor-pointer border-b-[3px] transition-colors ${
+          <li className="hidden md:block">
+            <Link to="/offers" className={`py-3 text-sm font-semibold border-b-[3px] transition-colors ${
               pathMatchRoute("/offers")
                 ? "text-content-primary dark:text-white border-primary"
                 : "text-content-secondary dark:text-content-muted border-transparent hover:text-content-primary dark:hover:text-white"
             }`}>
               Offers
-            </li>
-          </Link>
+            </Link>
+          </li>
 
           {loggedIn && (
-            <Link to="/saved" title="Saved Properties">
-              <li className={`py-3 text-sm font-semibold cursor-pointer border-b-[3px] transition-colors flex items-center gap-1 ${
+            <li className="hidden md:block">
+              <Link to="/saved" title="Saved Properties" className={`py-3 text-sm font-semibold border-b-[3px] transition-colors flex items-center gap-1 ${
                 pathMatchRoute("/saved")
                   ? "text-content-primary dark:text-white border-primary"
                   : "text-content-secondary dark:text-content-muted border-transparent hover:text-content-primary dark:hover:text-white"
               }`}>
                 <FaHeart className="text-primary text-xs" />
                 Saved
-              </li>
-            </Link>
+              </Link>
+            </li>
           )}
 
-          <Link to="/profile">
-            <li className={`py-3 text-sm font-semibold cursor-pointer border-b-[3px] transition-colors ${
+          <li className="hidden md:block">
+            <Link to="/profile" className={`py-3 text-sm font-semibold border-b-[3px] transition-colors ${
               (pathMatchRoute("/sign-in") || pathMatchRoute("/profile"))
                 ? "text-content-primary dark:text-white border-primary"
                 : "text-content-secondary dark:text-content-muted border-transparent hover:text-content-primary dark:hover:text-white"
             }`}>
               {pageState}
-            </li>
-          </Link>
+            </Link>
+          </li>
         </ul>
       </header>
 

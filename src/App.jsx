@@ -15,13 +15,13 @@ import Listing from "./pages/Listing"
 import Category from "./pages/Category"
 import Search from "./pages/Search"
 import Saved from "./pages/Saved"
-import Footer from "./components/Footer"
+import BottomNav from "./components/BottomNav"
 import { AuthProvider } from "./context/AuthContext"
 
 function App() {
   return (
     <AuthProvider>
-      <div className="bg-surface-secondary dark:bg-dark-bg min-h-screen">
+      <div className="bg-surface-secondary dark:bg-dark-bg min-h-screen pb-16 md:pb-0">
         <Router>
           <Navbar />
           <Routes>
@@ -46,7 +46,7 @@ function App() {
               <Route path="/edit-listing/:listingId" element={<EditListing />} />
             </Route>
           </Routes>
-          <Footer />
+          <BottomNav />
         </Router>
         <ToastContainer
           position="bottom-center"

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { FaStar, FaRegStar } from 'react-icons/fa'
 import { toast } from 'react-toastify'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useInView } from 'react-intersection-observer'
 import { useAuth } from '../context/AuthContext'
 import api from '../utils/api'
 
@@ -47,11 +48,19 @@ const ReviewSection = ({ listingId }) => {
   const [hasMore, setHasMore] = useState(false)
   const [nextCursor, setNextCursor] = useState(null)
   const [loadingMore, setLoadingMore] = useState(false)
+  const { ref: sentinelRef, inView } = useInView({ threshold: 0 })
   const [myRating, setMyRating] = useState(0)
   const [comment, setComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => { fetchReviews() }, [listingId])
+
+  useEffect(() => {
+    if (inView && hasMore && !loadingMore) {
+      setLoadingMore(true)
+      fetchReviews(nextCursor)
+    }
+  }, [inView, hasMore, loadingMore])
 
   async function fetchReviews(cursor = null) {
     try {
@@ -83,12 +92,6 @@ const ReviewSection = ({ listingId }) => {
       toast.error(err.response?.data?.message || 'Failed to submit review')
     }
     setSubmitting(false)
-  }
-
-  async function loadMore() {
-    if (!nextCursor) return
-    setLoadingMore(true)
-    await fetchReviews(nextCursor)
   }
 
   const avgRating = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0
@@ -175,11 +178,12 @@ const ReviewSection = ({ listingId }) => {
                 </motion.li>
               ))}
             </ul>
-            {hasMore && (
-              <div className="flex justify-center mt-5">
-                <button onClick={loadMore} disabled={loadingMore} className="text-sm text-primary hover:text-primary-hover font-semibold transition disabled:opacity-50">
-                  {loadingMore ? 'Loading…' : 'Load more reviews'}
-                </button>
+            <div ref={sentinelRef} className="h-4" />
+            {loadingMore && (
+              <div className="flex justify-center gap-1.5 py-4">
+                <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
+                <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
+                <span className="w-2 h-2 rounded-full bg-primary animate-bounce" />
               </div>
             )}
           </AnimatePresence>

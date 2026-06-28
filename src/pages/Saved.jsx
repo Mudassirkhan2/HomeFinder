@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FaHeart } from 'react-icons/fa'
+import { useInView } from 'react-intersection-observer'
 import ListingItem from '../components/ListingItem'
-import Spinner from '../components/Spinner'
+import { ListingCardSkeleton } from '../components/ListingCardSkeleton'
 import { useSavedListings } from '../hooks/useSavedListings'
 import api from '../utils/api'
 
@@ -14,8 +15,16 @@ const Saved = () => {
   const [hasMore, setHasMore] = useState(false)
   const [nextCursor, setNextCursor] = useState(null)
   const [loadingMore, setLoadingMore] = useState(false)
+  const { ref: sentinelRef, inView } = useInView({ threshold: 0 })
 
   useEffect(() => { fetchSaved() }, [])
+
+  useEffect(() => {
+    if (inView && hasMore && !loadingMore) {
+      setLoadingMore(true)
+      fetchSaved(nextCursor)
+    }
+  }, [inView, hasMore, loadingMore])
 
   async function fetchSaved(cursor = null) {
     try {
@@ -31,13 +40,13 @@ const Saved = () => {
     setLoadingMore(false)
   }
 
-  async function loadMore() {
-    if (!nextCursor) return
-    setLoadingMore(true)
-    await fetchSaved(nextCursor)
-  }
-
-  if (loading) return <Spinner />
+  if (loading) return (
+    <div className="max-w-6xl mx-auto px-3 py-6">
+      <ul className="sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {Array.from({ length: 8 }).map((_, i) => <ListingCardSkeleton key={i} />)}
+      </ul>
+    </div>
+  )
 
   return (
     <div className="max-w-6xl mx-auto px-3 py-6">
@@ -64,11 +73,12 @@ const Saved = () => {
               <ListingItem key={listing.id} id={listing.id} listing={listing.data} savedIds={savedIds} toggleSave={toggleSave} />
             ))}
           </motion.ul>
-          {hasMore && (
-            <div className="flex justify-center mt-8">
-              <button onClick={loadMore} disabled={loadingMore} className="bg-primary hover:bg-primary-hover text-white font-semibold px-8 py-2.5 rounded-lg shadow-md transition duration-150 disabled:opacity-60">
-                {loadingMore ? 'Loading…' : 'Load more'}
-              </button>
+          <div ref={sentinelRef} className="h-4" />
+          {loadingMore && (
+            <div className="flex justify-center gap-1.5 py-6">
+              <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
+              <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
+              <span className="w-2 h-2 rounded-full bg-primary animate-bounce" />
             </div>
           )}
         </>

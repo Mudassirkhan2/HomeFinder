@@ -37,12 +37,18 @@ export function AuthProvider({ children }) {
     return res.data.user
   }
 
+  async function googleLogin(credential) {
+    const res = await api.post('/auth/google', { credential })
+    setUser(res.data.user)
+    return res.data.user
+  }
+
   async function updatePassword(currentPassword, newPassword) {
     await api.put('/auth/me/password', { currentPassword, newPassword })
   }
 
   return (
-    <AuthContext.Provider value={{ user, checkingStatus, login, register, logout, updateProfile, updatePassword }}>
+    <AuthContext.Provider value={{ user, checkingStatus, login, register, logout, googleLogin, updateProfile, updatePassword }}>
       {children}
     </AuthContext.Provider>
   )
