@@ -15,9 +15,8 @@ const Navbar = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     const localTheme = window.localStorage.getItem('theme')
-    setTheme(localTheme ?? (prefersDark ? 'dark' : 'light'))
+    setTheme(localTheme ?? 'dark')
   }, [])
 
   useEffect(() => {
@@ -95,32 +94,29 @@ const Navbar = () => {
 
           {/* Desktop-only nav links — bottom tab bar handles mobile */}
           <li className="hidden md:flex items-stretch">
-            <Link to="/" className={`flex items-center text-sm font-semibold border-b-[3px] transition-colors ${
-              pathMatchRoute("/")
-                ? "text-content-primary dark:text-white border-primary"
-                : "text-content-secondary dark:text-content-muted border-transparent hover:text-content-primary dark:hover:text-white"
-            }`}>
+            <Link to="/" className={`flex items-center text-sm font-semibold border-b-[3px] transition-colors ${pathMatchRoute("/")
+              ? "text-content-primary dark:text-white border-primary"
+              : "text-content-secondary dark:text-content-muted border-transparent hover:text-content-primary dark:hover:text-white"
+              }`}>
               Home
             </Link>
           </li>
 
           <li className="hidden md:flex items-stretch">
-            <Link to="/offers" className={`flex items-center text-sm font-semibold border-b-[3px] transition-colors ${
-              pathMatchRoute("/offers")
-                ? "text-content-primary dark:text-white border-primary"
-                : "text-content-secondary dark:text-content-muted border-transparent hover:text-content-primary dark:hover:text-white"
-            }`}>
+            <Link to="/offers" className={`flex items-center text-sm font-semibold border-b-[3px] transition-colors ${pathMatchRoute("/offers")
+              ? "text-content-primary dark:text-white border-primary"
+              : "text-content-secondary dark:text-content-muted border-transparent hover:text-content-primary dark:hover:text-white"
+              }`}>
               Offers
             </Link>
           </li>
 
           {loggedIn && (
             <li className="hidden md:flex items-stretch">
-              <Link to="/saved" title="Saved Properties" className={`flex items-center gap-1 text-sm font-semibold border-b-[3px] transition-colors ${
-                pathMatchRoute("/saved")
-                  ? "text-content-primary dark:text-white border-primary"
-                  : "text-content-secondary dark:text-content-muted border-transparent hover:text-content-primary dark:hover:text-white"
-              }`}>
+              <Link to="/saved" title="Saved Properties" className={`flex items-center gap-1 text-sm font-semibold border-b-[3px] transition-colors ${pathMatchRoute("/saved")
+                ? "text-content-primary dark:text-white border-primary"
+                : "text-content-secondary dark:text-content-muted border-transparent hover:text-content-primary dark:hover:text-white"
+                }`}>
                 <FaHeart className="text-primary text-xs" />
                 Saved
               </Link>
@@ -128,11 +124,10 @@ const Navbar = () => {
           )}
 
           <li className="hidden md:flex items-stretch">
-            <Link to="/profile" className={`flex items-center text-sm font-semibold border-b-[3px] transition-colors ${
-              (pathMatchRoute("/sign-in") || pathMatchRoute("/profile"))
-                ? "text-content-primary dark:text-white border-primary"
-                : "text-content-secondary dark:text-content-muted border-transparent hover:text-content-primary dark:hover:text-white"
-            }`}>
+            <Link to="/profile" className={`flex items-center text-sm font-semibold border-b-[3px] transition-colors ${(pathMatchRoute("/sign-in") || pathMatchRoute("/profile"))
+              ? "text-content-primary dark:text-white border-primary"
+              : "text-content-secondary dark:text-content-muted border-transparent hover:text-content-primary dark:hover:text-white"
+              }`}>
               {pageState}
             </Link>
           </li>

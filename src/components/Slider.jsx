@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Autoplay, Pagination } from 'swiper'
 import 'swiper/css/bundle'
-import Spinner from './Spinner'
+import { SliderSkeleton } from './ListingCardSkeleton'
 import api from '../utils/api'
 
 const Slider = () => {
@@ -19,7 +19,7 @@ const Slider = () => {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <Spinner />
+  if (loading) return <SliderSkeleton />
   if (!listings || listings.length === 0) return null
 
   return (

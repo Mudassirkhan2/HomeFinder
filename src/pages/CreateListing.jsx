@@ -4,7 +4,6 @@ import { toast } from 'react-toastify'
 import { motion } from 'framer-motion'
 import { FaMapMarkerAlt, FaBed, FaBath } from 'react-icons/fa'
 import { MdSquareFoot } from 'react-icons/md'
-import Spinner from '../components/Spinner'
 import api from '../utils/api'
 
 const PROPERTY_TYPES = ['house', 'apartment', 'villa', 'plot', 'pg']
@@ -125,8 +124,6 @@ const CreateListing = () => {
     }
     setLoading(false)
   }
-
-  if (loading) return <Spinner />
 
   const previewPrice = regularprice
     ? `₹${Number(regularprice).toLocaleString('en-IN')}${type === 'rent' ? '/mo' : ''}`
@@ -442,9 +439,10 @@ const CreateListing = () => {
             <div className="flex gap-3">
               <button
                 type="submit"
-                className="flex-1 py-3.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-btn hover:shadow-btn-hover transition text-sm"
+                disabled={loading}
+                className="flex-1 py-3.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-btn hover:shadow-btn-hover transition text-sm disabled:opacity-60"
               >
-                Publish listing
+                {loading ? 'Publishing…' : 'Publish listing'}
               </button>
               <button
                 type="button"

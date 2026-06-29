@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext'
 import { useSavedListings } from '../hooks/useSavedListings'
 import api from '../utils/api'
 import ListingItem from '../components/ListingItem'
-import Spinner from '../components/Spinner'
+import { ListingCardSkeleton } from '../components/ListingCardSkeleton'
 
 const Profile = () => {
   const navigate = useNavigate()
@@ -293,7 +293,11 @@ const Profile = () => {
 
         {/* ── My Listings tab ── */}
         {activeTab === 'listings' && (
-          loading ? <Spinner /> : listings.length === 0 ? (
+          loading ? (
+            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => <ListingCardSkeleton key={i} />)}
+            </ul>
+          ) : listings.length === 0 ? (
             <div className="flex flex-col items-center py-20 text-center">
               <p className="text-content-muted mb-4">You haven't listed any properties yet.</p>
               <Link
@@ -330,7 +334,11 @@ const Profile = () => {
 
         {/* ── Saved tab ── */}
         {activeTab === 'saved' && (
-          savedLoading ? <Spinner /> : savedListings.length === 0 ? (
+          savedLoading ? (
+            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => <ListingCardSkeleton key={i} />)}
+            </ul>
+          ) : savedListings.length === 0 ? (
             <div className="flex flex-col items-center py-20 text-center">
               <FaHeart className="text-5xl text-surface-border dark:text-dark-border mb-4" />
               <p className="text-content-muted mb-4">No saved properties yet.</p>

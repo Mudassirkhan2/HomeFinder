@@ -4,7 +4,7 @@ import { toast } from 'react-toastify'
 import { motion } from 'framer-motion'
 import { FaMapMarkerAlt, FaBed, FaBath } from 'react-icons/fa'
 import { MdSquareFoot } from 'react-icons/md'
-import Spinner from '../components/Spinner'
+import { EditListingFormSkeleton } from '../components/ListingCardSkeleton'
 import api from '../utils/api'
 
 const PROPERTY_TYPES = ['house', 'apartment', 'villa', 'plot', 'pg']
@@ -135,7 +135,7 @@ const EditListing = () => {
     setSubmitting(false)
   }
 
-  if (loading || !formdata) return <Spinner />
+  if (loading || !formdata) return <EditListingFormSkeleton />
 
   const {
     type, propertyType, name, bedrooms, bathrooms, area,

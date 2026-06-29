@@ -13,7 +13,7 @@ import { geocodeAddress } from '../utils/geocode'
 import { toast } from 'react-toastify'
 import { motion } from 'framer-motion'
 import ReviewSection from '../components/ReviewSection'
-import Spinner from '../components/Spinner'
+import { ListingDetailSkeleton } from '../components/ListingCardSkeleton'
 import api from '../utils/api'
 
 delete L.Icon.Default.prototype._getIconUrl
@@ -75,7 +75,7 @@ const Listing = () => {
     }
   }
 
-  if (loading) return <Spinner />
+  if (loading) return <ListingDetailSkeleton />
   if (!listing) return (
     <div className="min-h-screen flex items-center justify-center bg-surface-secondary dark:bg-dark-bg">
       <p className="text-content-secondary dark:text-content-muted">Listing not found.</p>
