@@ -1,100 +1,112 @@
 
-<h1 align="center">
- HomeFinder
-  <br>
-</h1>
-<h4 align="center"> a Website where user can rent and sale their houses.</h4>
+<h1 align="center">HomeFinder</h1>
+<h4 align="center">A property listing platform for the Indian real estate market — rent, sell, and discover homes.</h4>
 
-
-
-
+---
 
 ## About HomeFinder
-- The Website enables users to effortlessly list their houses for rent or sale, providing a seamless experience for property owners to showcase their properties to potential tenants or buyers.
-- Users have the ability to enter comprehensive details about their house, including location,room configuration ,property type, Parking facilities, rental or sale price, and offer price (optional). Additionally, users can upload high-resolution images  to captivate the attention of interested parties.
-- To ensure a dynamic and up-to-date property marketplace, User Can see latest offers Listed houses for Rent /Sale.
 
+HomeFinder is a full-stack property marketplace targeting the Indian real estate market (prices in ₹). Property owners can list homes for rent or sale with detailed information, high-resolution images, and location maps. Buyers and renters can browse, search, filter, and save listings they're interested in.
 
-
-### Screenshot
- # Desktop-view
-![Screenshot 2023-05-14 150821](https://github.com/Mudassirkhan2/HomeFinder/assets/106579572/90016c65-a26f-43a0-9786-7e4ecc693818)
-
-
- # Mobile-view
- 
-
-![Screenshot 2023-05-14 150952](https://github.com/Mudassirkhan2/HomeFinder/assets/106579572/2ab5c533-45c8-4266-9f23-a7e723648a50) 
-
-
-### Links
-
-- Live Site URL: [Click Here](https://home-finder-khan.vercel.app/)
-
-
-
-### Built with
-- [React](https://reactjs.org/) - JS library
-- [Tailwind CSS](https://tailwindcss.com/) - CSS framework
-- Firebase for Backend Database
-- Swiper.js for slider
-- Framer Motion for animation 
-- react-router-dom
-- react-toastify for alerts
-- react-icons 
-- Mobile-first workflow
+---
 
 ## Features
 
-* Where user can see latest listed houses for offer prices/rent /sale, By clicking on any user can see detailed information about listing and having slider which autoplays.
-* User can login using <b>Google</b> gmail  account or test credentails (using firebase Authentication).
-* If user  <b>forgot</b> password , Can change passoword using reset Link.
-* Profile Page, User can edit Name of the Account.
-* Implemented <b> Dark mode </b>using Tailwind css in built classes.
-* Added Responsiveness for nearly all devices from 350px onwards :tada:
-* Loaders & Alerts: Loaders are added when products are fetching, React Toastify is used for alerts message
-* Note:- 'Public Page'- Opens without Authentication, 'Private Page' - Opens only if user is Authenticated otherwise opens sign in  Page.
+- **Browse & Search** — Filter listings by type (rent/sale), property category, price range, and more
+- **Listing Detail** — Image carousel, interactive Leaflet map, amenities breakdown, and WhatsApp contact
+- **Create & Edit Listings** — Multi-image upload (up to 6), full property details, offer pricing
+- **Saved Listings** — Bookmark properties and view them on a dedicated page
+- **Reviews & Ratings** — Leave reviews on listings; average rating is shown on the listing card
+- **User Profiles** — Edit name, email, and password; view and manage your own listings
+- **Dark Mode** — Full dark theme support via Tailwind CSS
+- **Infinite Scroll** — Listings load progressively as you scroll
+- **Skeleton Loaders** — Smooth loading states across all pages
+- **Forgot Password** — Reset password via email link
+- **Responsive Design** — Works across mobile, tablet, and desktop
 
+---
 
-## Installation
+## Tech Stack
 
-To run this application locally, you'll need to have Node.js and npm installed on your machine.
+### Frontend
+| Library | Purpose |
+|---------|---------|
+| React 18 + Vite | UI framework and build tool |
+| Tailwind CSS 3 | Styling with custom design tokens |
+| Framer Motion | Page and list animations |
+| Swiper.js | Image carousels |
+| React Router DOM 6 | Client-side routing |
+| React Leaflet + Leaflet | Interactive maps (OpenStreetMap, no billing) |
+| Axios | API calls via shared instance |
+| React Toastify | Toast notifications |
+| React Intersection Observer | Infinite scroll / lazy loading |
 
+### Backend
+| Library | Purpose |
+|---------|---------|
+| Node.js + Express 5 | REST API server (port 5000) |
+| MongoDB + Mongoose 8 | Database and ODM |
+| Cloudinary | Image storage and auto-resize |
+| JWT (httpOnly cookies) | Authentication |
+| Multer | Multipart file upload handling |
 
-    
+---
+
 ## Run Locally
 
-Clone the project
+### Prerequisites
+
+- Node.js 18+
+- MongoDB instance (local or Atlas)
+- Cloudinary account
+
+### Frontend
 
 ```bash
-  git clone https://github.com/your-username/HomeFinder.git
+git clone https://github.com/Mudassirkhan2/HomeFinder.git
+cd HomeFinder
+npm install
+npm run dev
 ```
-Go to the project directory
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+### Backend
 
 ```bash
-  cd my-project
+cd homefinder-api
+npm install
+npm run dev
 ```
 
-Install dependencies
+The API runs on [http://localhost:5000](http://localhost:5000).
 
-```bash
-  npm install
+### Environment Variables
+
+Create a `.env` file in `homefinder-api/`:
+
+```env
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 ```
 
-Start the server
+Create a `.env` file in `HomeFinder/`:
 
-```bash
-  npm run dev
+```env
+VITE_API_URL=http://localhost:5000/api
 ```
 
+---
 
-```bash
-  Open the application in your browser at http://localhost:3000.
-```
+### Links
+
+- Live Site: [home-finder-khan.vercel.app](https://home-finder-khan.vercel.app/)
+
+---
 
 ## Issues & Suggestions
 
-* If you face any issues while using the app, then you can surely raise issue on this repo.
-
-
-* You can also give your valuable suggestions/ feedback to improve this project via Linkedin DM.
+Feel free to open an issue on this repo or reach out via LinkedIn DM with feedback or suggestions.
